@@ -1,0 +1,65 @@
+/* scStudio — clean, modern, minimal styling */
+
+:root {
+  --sc-accent: #3b6ea5;
+  --sc-muted: #6b7785;
+  --sc-bg-soft: #f6f8fa;
+  --sc-border: #e6e9ee;
+}
+
+/* Brand in navbar */
+.scstudio-brand { display: inline-flex; align-items: baseline; gap: .5rem; }
+.scstudio-brand .scstudio-sub {
+  font-size: .72rem; color: var(--sc-muted); font-weight: 400; letter-spacing: .02em;
+}
+
+/* Step cards: generous whitespace, soft borders */
+.scstudio-step { border: 1px solid var(--sc-border); box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.scstudio-results { padding-top: .25rem; }
+.scstudio-summary { margin-bottom: 1rem; }
+
+/* Explainer card ("What is this step?") */
+.scstudio-explainer .accordion-button {
+  font-weight: 600; background: var(--sc-bg-soft); color: var(--sc-accent);
+}
+.scstudio-explainer-wrap { padding-bottom: .25rem; }
+.scstudio-example {
+  margin-top: .5rem; padding: .6rem .75rem; background: var(--sc-bg-soft);
+  border-left: 3px solid var(--sc-accent); border-radius: .3rem; font-size: .9rem;
+}
+.scstudio-example-tag {
+  display: inline-block; font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  color: var(--sc-accent); margin-right: .4rem; letter-spacing: .04em;
+}
+
+/* Help "?" badge */
+.scstudio-help {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.05rem; height: 1.05rem; margin-left: .35rem;
+  font-size: .72rem; font-weight: 700; color: #fff; background: var(--sc-muted);
+  border-radius: 50%; cursor: help;
+}
+.scstudio-label { font-weight: 600; margin-bottom: .25rem; display: block; }
+
+/* Run button */
+.scstudio-run { margin-top: .75rem; }
+
+/* Sidebar status */
+.scstudio-statline { display: flex; justify-content: space-between; padding: .2rem 0; }
+.scstudio-statlabel { color: var(--sc-muted); }
+.scstudio-statvalue { font-weight: 600; }
+.scstudio-status-empty { color: var(--sc-muted); }
+.scstudio-warn {
+  margin-top: .6rem; padding: .5rem .6rem; font-size: .82rem;
+  background: #fff6e6; border: 1px solid #ffe0a3; border-radius: .35rem; color: #8a5a00;
+}
+.scstudio-hint { color: var(--sc-muted); font-size: .85rem; }
+
+/* Placeholders when a step hasn't run yet */
+.scstudio-placeholder {
+  padding: 2rem; text-align: center; color: var(--sc-muted);
+  background: var(--sc-bg-soft); border: 1px dashed var(--sc-border); border-radius: .5rem;
+}
+
+/* Value-box tiles */
+.scstudio-tile { border: 1px solid var(--sc-border); border-radius: .5rem; }

@@ -1,0 +1,62 @@
+---
+title: "Getting started with scStudio"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with scStudio}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+## What scStudio is
+
+scStudio is a local, browser-based app for interactive single-cell RNA-seq
+analysis. You launch it with one command; it opens in your browser and runs all
+computation on your own machine.
+
+## Launch it
+
+```{r}
+scStudio::run_app()
+```
+
+This starts a local server and opens the app. Nothing is uploaded to any remote
+server.
+
+## Try it in 30 seconds (no data needed)
+
+1. On the **1. Import** step, keep the source set to **Demo data**.
+2. Leave the dataset as *Bundled tiny example* and click **Load demo data**.
+3. Walk left to right through the steps. Each step has a "What is this step?"
+   card, a method choice, adjustable thresholds, and an interactive preview.
+
+## Use your own data
+
+On **1. Import**, choose **Upload file** and pick:
+
+- an `.rds` Seurat / SingleCellExperiment object,
+- a 10x `.h5`, or
+- a counts table (CSV/TSV; genes in rows, cells in columns).
+
+Old Seurat objects are updated automatically. You can also fetch a file from a
+URL.
+
+## A typical run
+
+Import → QC (adaptive MAD thresholds) → Doublet removal (scDblFinder) →
+Normalize (LogNormalize) → Features + PCA → *(optional)* Integrate (Harmony) →
+Cluster (Leiden) → Embed (UMAP) → Markers → Annotate (manual / SingleR /
+Azimuth) → Visualize → Export.
+
+At **Export** you can download the processed object and an R script that
+reproduces every step you ran.
+
+## Installing the heavy dependencies
+
+The analysis engines (Seurat, scDblFinder, harmony, SingleR, ...) are optional
+at install time. If a step needs a package you don't have, the app tells you what
+to install. To get everything at once without managing dependencies, use the
+Docker image (see the README).

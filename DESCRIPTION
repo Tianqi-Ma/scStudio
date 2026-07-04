@@ -1,0 +1,62 @@
+Package: scStudio
+Title: Interactive Local Single-Cell RNA-seq Analysis Studio
+Version: 0.1.0
+Authors@R:
+    person("scStudio", "Authors", email = "noreply@example.com", role = c("aut", "cre"))
+Description: A localhost-first, browser-based interactive application for
+    single-cell RNA-seq analysis. Users launch the app with a single command,
+    upload a count matrix (Seurat/SingleCellExperiment .rds, 10x, .h5, or a
+    plain table), and interactively run a modern analysis pipeline -- quality
+    control, doublet removal, normalization, dimensionality reduction, batch
+    integration, clustering, non-linear embedding, marker detection, and
+    cell-type annotation -- entirely on their own machine. Every step offers
+    method alternatives, adjustable thresholds, a beginner-friendly explanation,
+    a result summary, an interactive preview plot with hover details, and
+    reproducible parameter logging.
+License: MIT + file LICENSE
+Depends:
+    R (>= 4.1.0)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports:
+    shiny (>= 1.7.4),
+    bslib (>= 0.5.0),
+    ggplot2,
+    Matrix,
+    stats,
+    utils,
+    tools
+Suggests:
+    SeuratObject,
+    Seurat,
+    SingleCellExperiment,
+    SummarizedExperiment,
+    scater,
+    scran,
+    scDblFinder,
+    DoubletFinder,
+    harmony,
+    glmGamPoi,
+    SingleR,
+    celldex,
+    Azimuth,
+    clustree,
+    plotly,
+    ggiraph,
+    DT,
+    shinyWidgets,
+    promises,
+    future,
+    progressr,
+    ggrastr,
+    scattermore,
+    SeuratDisk,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+biocViews:
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/Tianqi-Ma/scStudio
+BugReports: https://github.com/Tianqi-Ma/scStudio/issues

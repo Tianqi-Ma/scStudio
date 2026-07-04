@@ -1,0 +1,208 @@
+#' Compute wrappers around Seurat / Bioconductor
+#'
+#' Each function performs one analysis step on a Seurat object and returns the
+#' updated object (or a result). Kept separate from the UI so the science is
+#' testable and the modules stay thin. All heavy dependencies are checked by the
+#' caller via [require_pkgs()].
+#'
+#' Methods reflect current (2023-2025) best practice; see README for references.
+#'
+#' @name fct_compute
+#' @keywords internal
+NULL
+
+# ---- QC ---------------------------------------------------------------------
+
+#' Compute QC metrics (mitochondrial / ribosomal / hemoglobin percentages)
+#' @param obj Seurat object.
+#' @param species "human" or "mouse" (controls gene-name patterns).
+#' @return Seurat object with `percent.mt`, `percent.ribo`, `percent.hb` in meta.
+#' @keywords internal
+qc_add_metrics <- function(obj, species = c("human", "mouse")) {
+  species <- match.arg(species)
+  mt   <- if (species == "human") "^MT-"   else "^mt-"
+  ribo <- if (species == "human") "^RP[SL]" else "^Rp[sl]"
+  hb   <- if (species == "human") "^HB[^P]" else "^Hb[^p]"
+  obj[["percent.mt"]]   <- Seurat::PercentageFeatureSet(obj, pattern = mt)
+  obj[["percent.ribo"]] <- Seurat::PercentageFeatureSet(obj, pattern = ribo)
+  obj[["percent.hb"]]   <- Seurat::PercentageFeatureSet(obj, pattern = hb)
+  obj
+}
+
+#' Adaptive (MAD-based) outlier flags for QC metrics
+#'
+#' Flags cells that are more than `nmads` median-absolute-deviations from the
+#' median on log1p(counts), log1p(genes), and (upper only) percent.mt -- the
+#' modern alternative to fixed cutoffs.
+#'
+#' @param obj Seurat object with QC metrics.
+#' @param nmads_lib,nmads_mt MAD multipliers.
+#' @return Logical vector: TRUE = keep, FALSE = flagged outlier.
+#' @keywords internal
+qc_mad_keep <- function(obj, nmads_lib = 5, nmads_mt = 3) {
+  md <- obj_meta(obj)
+  is_out <- function(x, nmads, type = "both", log = FALSE) {
+    if (log) x <- log1p(x)
+    med <- stats::median(x, na.rm = TRUE)
+    dev <- stats::mad(x, center = med, na.rm = TRUE)
+    lower <- med - nmads * dev
+    upper <- med + nmads * dev
+    switch(type,
+           both   = x < lower | x > upper,
+           higher = x > upper,
+           lower  = x < lower)
+  }
+  out_counts <- is_out(md$nCount_RNA,   nmads_lib, "both",   log = TRUE)
+  out_genes  <- is_out(md$nFeature_RNA, nmads_lib, "both",   log = TRUE)
+  out_mt     <- if (!is.null(md$percent.mt)) is_out(md$percent.mt, nmads_mt, "higher") else FALSE
+  !(out_counts | out_genes | out_mt)
+}
+
+#' Apply manual QC thresholds
+#' @keywords internal
+qc_manual_keep <- function(obj, min_genes, max_genes, max_mt) {
+  md <- obj_meta(obj)
+  keep <- md$nFeature_RNA >= min_genes & md$nFeature_RNA <= max_genes
+  if (!is.null(md$percent.mt)) keep <- keep & md$percent.mt <= max_mt
+  keep
+}
+
+# ---- Doublets ---------------------------------------------------------------
+
+#' Run doublet detection (scDblFinder by default) and add a call to metadata
+#' @param obj Seurat object; @param method "scDblFinder" or "DoubletFinder".
+#' @return Seurat object with `doublet_score` and `doublet_class` in meta.
+#' @keywords internal
+run_doublets <- function(obj, method = c("scDblFinder", "DoubletFinder")) {
+  method <- match.arg(method)
+  if (method == "scDblFinder") {
+    sce <- Seurat::as.SingleCellExperiment(obj)
+    sce <- scDblFinder::scDblFinder(sce)
+    obj[["doublet_score"]] <- SummarizedExperiment::colData(sce)$scDblFinder.score
+    obj[["doublet_class"]] <- SummarizedExperiment::colData(sce)$scDblFinder.class
+  } else {
+    stop("DoubletFinder path requires per-dataset pK sweep; use scDblFinder for the one-click default.")
+  }
+  obj
+}
+
+# ---- Normalization ----------------------------------------------------------
+
+#' Normalize counts
+#' @param obj Seurat object; @param method "LogNormalize","SCT","scran".
+#' @keywords internal
+normalize_obj <- function(obj, method = c("LogNormalize", "SCT"), scale_factor = 1e4) {
+  method <- match.arg(method)
+  if (method == "LogNormalize") {
+    obj <- Seurat::NormalizeData(obj, normalization.method = "LogNormalize",
+                                 scale.factor = scale_factor, verbose = FALSE)
+  } else {
+    obj <- Seurat::SCTransform(obj, verbose = FALSE)
+  }
+  obj
+}
+
+# ---- Features + PCA ---------------------------------------------------------
+
+#' HVG selection, scaling, and PCA
+#' @keywords internal
+reduce_obj <- function(obj, n_hvg = 2000, npcs = 50, hvg_method = "vst") {
+  obj <- Seurat::FindVariableFeatures(obj, selection.method = hvg_method,
+                                      nfeatures = n_hvg, verbose = FALSE)
+  obj <- Seurat::ScaleData(obj, verbose = FALSE)
+  obj <- Seurat::RunPCA(obj, npcs = npcs, verbose = FALSE)
+  obj
+}
+
+# ---- Integration ------------------------------------------------------------
+
+#' Batch integration (Harmony by default; CCA/RPCA via Seurat v5)
+#'
+#' @param obj Seurat object (normalized, with PCA for harmony).
+#' @param batch Metadata column identifying batch/sample.
+#' @param method "harmony" (default), "none", "CCA", or "RPCA".
+#' @param dims Dimensions to use for anchor-based methods.
+#' @return Seurat object with an integrated reduction ("harmony" or
+#'   "integrated.dr"); downstream steps can point their `reduction` at it.
+#' @keywords internal
+integrate_obj <- function(obj, batch, method = c("harmony", "none", "CCA", "RPCA"),
+                          dims = 30) {
+  method <- match.arg(method)
+  if (method == "none") return(obj)
+
+  if (method == "harmony") {
+    obj <- harmony::RunHarmony(obj, group.by.vars = batch)
+    return(obj)
+  }
+
+  # CCA / RPCA use Seurat v5 IntegrateLayers. Split layers by batch first.
+  if (!"IntegrateLayers" %in% getNamespaceExports("Seurat")) {
+    stop("CCA/RPCA integration requires Seurat v5 (IntegrateLayers). ",
+         "Use Harmony, or upgrade Seurat.")
+  }
+  obj[["RNA"]] <- base::split(obj[["RNA"]], f = obj_meta(obj)[[batch]])
+  obj <- Seurat::FindVariableFeatures(obj, verbose = FALSE)
+  obj <- Seurat::ScaleData(obj, verbose = FALSE)
+  obj <- Seurat::RunPCA(obj, verbose = FALSE)
+  m <- if (method == "CCA") "CCAIntegration" else "RPCAIntegration"
+  obj <- Seurat::IntegrateLayers(obj, method = get(m, envir = asNamespace("Seurat")),
+                                 orig.reduction = "pca",
+                                 new.reduction = "integrated.dr", verbose = FALSE)
+  obj[["RNA"]] <- SeuratObject::JoinLayers(obj[["RNA"]])
+  obj
+}
+
+# ---- Clustering -------------------------------------------------------------
+
+#' Neighbors + clustering at one or more resolutions
+#' @keywords internal
+cluster_obj <- function(obj, reduction = "pca", dims = 30,
+                        resolutions = 0.5, algorithm = 4) {
+  obj <- Seurat::FindNeighbors(obj, reduction = reduction, dims = seq_len(dims),
+                               verbose = FALSE)
+  for (res in resolutions) {
+    obj <- Seurat::FindClusters(obj, resolution = res, algorithm = algorithm,
+                                verbose = FALSE)
+  }
+  obj
+}
+
+# ---- Embedding --------------------------------------------------------------
+
+#' Non-linear embedding for visualization (UMAP / t-SNE)
+#' @keywords internal
+embed_obj <- function(obj, method = c("umap", "tsne"), reduction = "pca",
+                      dims = 30, n_neighbors = 30, min_dist = 0.3, perplexity = 30) {
+  method <- match.arg(method)
+  d <- seq_len(dims)
+  if (method == "umap") {
+    obj <- Seurat::RunUMAP(obj, reduction = reduction, dims = d,
+                           n.neighbors = n_neighbors, min.dist = min_dist,
+                           verbose = FALSE)
+  } else {
+    obj <- Seurat::RunTSNE(obj, reduction = reduction, dims = d,
+                           perplexity = perplexity)
+  }
+  obj
+}
+
+# ---- Markers ----------------------------------------------------------------
+
+#' Marker genes per cluster
+#' @keywords internal
+markers_obj <- function(obj, test = "wilcox", logfc = 0.25, min_pct = 0.1,
+                        only_pos = TRUE) {
+  Seurat::FindAllMarkers(obj, test.use = test, logfc.threshold = logfc,
+                         min.pct = min_pct, only.pos = only_pos, verbose = FALSE)
+}
+
+# ---- Annotation -------------------------------------------------------------
+
+#' Reference-based annotation with SingleR
+#' @keywords internal
+annotate_singler <- function(obj, ref) {
+  sce <- Seurat::as.SingleCellExperiment(obj)
+  pred <- SingleR::SingleR(test = sce, ref = ref$data, labels = ref$labels)
+  obj[["SingleR"]] <- pred$labels
+  obj
+}
