@@ -29,18 +29,17 @@ qc_add_metrics <- function(obj, species = c("human", "mouse")) {
   obj
 }
 
-#' Adaptive (MAD-based) outlier flags for QC metrics
+#' Adaptive (MAD-based) outlier flags from a metadata data.frame (pure)
 #'
-#' Flags cells that are more than `nmads` median-absolute-deviations from the
-#' median on log1p(counts), log1p(genes), and (upper only) percent.mt -- the
-#' modern alternative to fixed cutoffs.
+#' The testable core of the QC rule: flags cells more than `nmads`
+#' median-absolute-deviations from the median on log1p(counts), log1p(genes),
+#' and (upper only) percent.mt -- the modern alternative to fixed cutoffs.
 #'
-#' @param obj Seurat object with QC metrics.
+#' @param md data.frame with `nCount_RNA`, `nFeature_RNA`, optional `percent.mt`.
 #' @param nmads_lib,nmads_mt MAD multipliers.
 #' @return Logical vector: TRUE = keep, FALSE = flagged outlier.
 #' @keywords internal
-qc_mad_keep <- function(obj, nmads_lib = 5, nmads_mt = 3) {
-  md <- obj_meta(obj)
+qc_mad_keep_from_meta <- function(md, nmads_lib = 5, nmads_mt = 3) {
   is_out <- function(x, nmads, type = "both", log = FALSE) {
     if (log) x <- log1p(x)
     med <- stats::median(x, na.rm = TRUE)
@@ -58,13 +57,28 @@ qc_mad_keep <- function(obj, nmads_lib = 5, nmads_mt = 3) {
   !(out_counts | out_genes | out_mt)
 }
 
-#' Apply manual QC thresholds
+#' Adaptive (MAD-based) outlier flags for a Seurat object
+#' @param obj Seurat object with QC metrics.
+#' @param nmads_lib,nmads_mt MAD multipliers.
+#' @return Logical keep vector.
 #' @keywords internal
-qc_manual_keep <- function(obj, min_genes, max_genes, max_mt) {
-  md <- obj_meta(obj)
+qc_mad_keep <- function(obj, nmads_lib = 5, nmads_mt = 3) {
+  qc_mad_keep_from_meta(obj_meta(obj), nmads_lib, nmads_mt)
+}
+
+#' Apply manual QC thresholds to a metadata data.frame (pure)
+#' @param md data.frame with `nFeature_RNA`, optional `percent.mt`.
+#' @keywords internal
+qc_manual_keep_from_meta <- function(md, min_genes, max_genes, max_mt) {
   keep <- md$nFeature_RNA >= min_genes & md$nFeature_RNA <= max_genes
   if (!is.null(md$percent.mt)) keep <- keep & md$percent.mt <= max_mt
   keep
+}
+
+#' Apply manual QC thresholds to a Seurat object
+#' @keywords internal
+qc_manual_keep <- function(obj, min_genes, max_genes, max_mt) {
+  qc_manual_keep_from_meta(obj_meta(obj), min_genes, max_genes, max_mt)
 }
 
 # ---- Doublets ---------------------------------------------------------------

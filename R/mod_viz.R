@@ -134,12 +134,16 @@ mod_viz_server <- function(id, rv, log_rv) {
       }
     })
 
-    output$iplot <- plotly::renderPlotly({
-      gg <- current_plot()
-      shiny::req(gg)
-      plotly::ggplotly(gg, tooltip = "text") |>
-        plotly::config(displayModeBar = FALSE)
-    })
+    # Only define the interactive output when plotly is installed; otherwise
+    # referencing plotly:: at setup would error on machines without it.
+    if (has_pkg("plotly")) {
+      output$iplot <- plotly::renderPlotly({
+        gg <- current_plot()
+        shiny::req(gg)
+        plotly::ggplotly(gg, tooltip = "text") |>
+          plotly::config(displayModeBar = FALSE)
+      })
+    }
 
     output$splot <- shiny::renderPlot({
       gg <- current_plot()
