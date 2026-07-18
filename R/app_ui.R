@@ -85,8 +85,16 @@ app_steps <- function() {
     list(v = "embed",     n = 8,  phase = "structure",en = "Embed",         zh = "降维图", ui = mod_embed_ui),
     list(v = "markers",   n = 9,  phase = "identity", en = "Markers",       zh = "标志基因", ui = mod_markers_ui),
     list(v = "annotate",  n = 10, phase = "identity", en = "Annotate",      zh = "注释",       ui = mod_annotate_ui),
-    list(v = "viz",       n = 11, phase = "output",   en = "Visualize",     zh = "可视化", ui = mod_viz_ui),
-    list(v = "export",    n = 12, phase = "output",   en = "Export",        zh = "导出",       ui = mod_export_ui)
+    list(v = "enrichment",n = 11, phase = "identity", en = "Enrichment/GSEA", zh = "富集/GSEA", ui = mod_enrichment_ui),
+    list(v = "trajectory",n = 12, phase = "traj",     en = "Trajectory",    zh = "轨迹",       ui = mod_trajectory_ui),
+    list(v = "velocity",  n = 13, phase = "traj",     en = "RNA velocity",  zh = "RNA 速率",   ui = mod_velocity_ui),
+    list(v = "dynamic",   n = 14, phase = "traj",     en = "Dynamic features", zh = "动态特征", ui = mod_dynamic_ui),
+    list(v = "cellcycle", n = 15, phase = "advanced", en = "Cell cycle & signatures", zh = "周期与信号", ui = mod_cellcycle_signatures_ui),
+    list(v = "cellcomm",  n = 16, phase = "advanced", en = "Cell communication", zh = "细胞通讯", ui = mod_cellcomm_ui),
+    list(v = "malignancy",n = 17, phase = "advanced", en = "Malignant / CNV", zh = "恶性/CNV", ui = mod_malignancy_ui),
+    list(v = "viz",       n = 18, phase = "output",   en = "Visualize",     zh = "可视化", ui = mod_viz_ui),
+    list(v = "report",    n = 19, phase = "output",   en = "Report",        zh = "报告",       ui = mod_report_ui),
+    list(v = "export",    n = 20, phase = "output",   en = "Export",        zh = "导出",       ui = mod_export_ui)
   )
 }
 
@@ -98,6 +106,8 @@ app_phases <- function() {
     preproc   = list(en = "Preprocess",   zh = "预处理"),
     structure = list(en = "Structure",    zh = "结构"),
     identity  = list(en = "Identity",     zh = "身份"),
+    traj      = list(en = "Trajectory",   zh = "轨迹与动态"),
+    advanced  = list(en = "Advanced",     zh = "高级"),
     output    = list(en = "Output",       zh = "产出")
   )
 }

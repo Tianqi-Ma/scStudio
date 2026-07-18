@@ -61,6 +61,10 @@ mod_embed_ui <- function(id) {
                       "perplexity", "有效邻居数（t-SNE）。"),
       shiny::numericInput(ns("perplexity"), NULL, value = 30, min = 5, max = 100)
     ),
+    shiny::checkboxInput(ns("mask"),
+                         i18n("Outline cell types (mascarade)",
+                              "细胞类型轮廓 (mascarade)"),
+                         value = FALSE),
     run_button(ns("run"), "Run embedding", "运行降维")
   )
   step_container(title = list(en = "Embedding (UMAP / t-SNE)", zh = "降维可视化"),
@@ -162,6 +166,13 @@ mod_embed_server <- function(id, rv, log_rv) {
       cols <- obj_meta_cols(obj)
       color_by <- intersect(c("seurat_clusters"), cols)
       color_by <- if (length(color_by)) color_by[1] else NULL
+      # Outlined (mascarade) view: use scop's dim plot with mask overlays.
+      if (isTRUE(input$mask) && has_pkg("scop") && !is.null(color_by)) {
+        p <- tryCatch(sc_dimplot(obj, group_by = color_by, reduction = reduction,
+                                 mask = TRUE),
+                      error = function(e) NULL)
+        if (!is.null(p)) return(p)
+      }
       df <- embedding_df(obj, reduction = reduction, color_by = color_by)
       if (!is.null(color_by)) {
         df$color <- factor(df$color)

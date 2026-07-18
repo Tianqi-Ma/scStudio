@@ -25,7 +25,19 @@ RUN R -e "install.packages(c( \
 
 RUN R -e "BiocManager::install(c( \
       'SingleCellExperiment','SummarizedExperiment','scater','scran', \
-      'scDblFinder','glmGamPoi','SingleR','celldex'), update=FALSE, ask=FALSE)"
+      'scDblFinder','glmGamPoi','SingleR','celldex','UCell','clusterProfiler', \
+      'ComplexHeatmap','slingshot','batchelor'), update=FALSE, ask=FALSE)"
+
+# The analysis + plotting engine (scop) and its ecosystem. scop pulls a large
+# tree; give it its own layer. LIANA/mascarade/copykat for cell-cell comm & CNV.
+RUN R -e "remotes::install_github('mengxu98/scop', upgrade='never')" && \
+    R -e "remotes::install_github(c('saezlab/liana','alserglab/mascarade','navinlabcode/copykat'), upgrade='never')"
+
+# Pre-bake the Python/conda environment for the Python-backed analyses
+# (scVelo, PAGA, Palantir, scVI, scanorama, BBKNN). Doing this at BUILD time
+# means users never wait for PrepareEnv() at runtime.
+RUN R -e "reticulate::install_miniconda()" && \
+    R -e "tryCatch(scop::PrepareEnv(), error=function(e) message('PrepareEnv at build: ', conditionMessage(e)))"
 
 # Install the app itself (copy source and install from local path).
 WORKDIR /opt/scStudio

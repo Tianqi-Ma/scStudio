@@ -70,7 +70,15 @@ app_server <- function(input, output, session) {
   mod_embed_server("embed", rv, log_rv)
   mod_markers_server("markers", rv, log_rv)
   mod_annotate_server("annotate", rv, log_rv)
+  mod_enrichment_server("enrichment", rv, log_rv)
+  mod_trajectory_server("trajectory", rv, log_rv)
+  mod_velocity_server("velocity", rv, log_rv)
+  mod_dynamic_server("dynamic", rv, log_rv)
+  mod_cellcycle_signatures_server("cellcycle", rv, log_rv)
+  mod_cellcomm_server("cellcomm", rv, log_rv)
+  mod_malignancy_server("malignancy", rv, log_rv)
   mod_viz_server("viz", rv, log_rv)
+  mod_report_server("report", rv, log_rv)
   mod_export_server("export", rv, log_rv)
 }
 

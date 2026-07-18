@@ -57,6 +57,10 @@ mod_viz_ui <- function(id) {
                       "用于表达图（violin/dot/feature/heatmap）的基因名，以逗号分隔。"),
       shiny::textInput(ns("genes"), NULL, placeholder = "e.g. CD3D, MS4A1, LYZ")
     ),
+    shiny::checkboxInput(ns("mask"),
+                         i18n("Outline cell types (mascarade)",
+                              "细胞类型轮廓 (mascarade)"),
+                         value = FALSE),
     label_with_help("Download format", "File type for the downloaded figure.",
                     "下载格式", "下载图片的文件类型。"),
     shiny::radioButtons(ns("fmt"), NULL, c("PNG" = "png", "PDF" = "pdf"), inline = TRUE),
@@ -111,6 +115,12 @@ mod_viz_server <- function(id, rv, log_rv) {
           umap = {
             shiny::validate(shiny::need(length(red) && !is.na(red),
                                         "No UMAP/embedding found. Run an embedding first."))
+            # Outlined (mascarade) view: use scop's dim plot with mask overlays.
+            if (isTRUE(input$mask) && has_pkg("scop") && !is.null(input$meta_col)) {
+              p <- sc_dimplot(obj, group_by = input$meta_col, reduction = red,
+                              mask = TRUE)
+              if (!is.null(p)) return(p)
+            }
             Seurat::DimPlot(obj, reduction = red, group.by = input$meta_col) +
               scstudio_theme()
           },

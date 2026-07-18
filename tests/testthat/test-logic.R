@@ -24,11 +24,11 @@ test_that("memory_advice warns only for large datasets", {
 test_that("demo dataset catalogue is well-formed", {
   ds <- demo_datasets()
   expect_s3_class(ds, "data.frame")
-  expect_true(all(c("id", "name", "format", "url", "description") %in% names(ds)))
-  expect_true("bundled" %in% ds$id)
-  # the bundled entry needs no URL; network ones must have one
-  expect_equal(ds$url[ds$id == "bundled"], "")
-  expect_true(all(nzchar(ds$url[ds$id != "bundled"])))
+  expect_true(all(c("id", "name", "format", "source", "description") %in% names(ds)))
+  expect_true(all(c("pbmc3k", "pancreas_sub", "bundled") %in% ds$id))
+  expect_true(all(nzchar(ds$description)))
+  # ids are unique
+  expect_equal(anyDuplicated(ds$id), 0L)
 })
 
 test_that("MAD-based QC keeps normal cells and flags outliers", {

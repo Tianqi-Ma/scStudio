@@ -165,10 +165,24 @@ mod_import_server <- function(id, rv, log_rv, parent = NULL) {
       shiny::req(got)
       nm <- demo_datasets()
       label <- nm$name[nm$id == input$demo_id]
-      load_into_hub(got$path, got$format,
-                    source_label = paste0("Demo: ", label),
-                    log_params = list(source = "demo", demo = input$demo_id),
-                    log_file = paste0("demo_", input$demo_id))
+      if (!is.null(got$obj)) {
+        # Demo already a Seurat/SCE object (pbmc3k, pancreas_sub): load directly.
+        if (!require_pkgs(c("Seurat", "SeuratObject"), "Import")) return(NULL)
+        obj <- with_progress_notify(as_seurat(got$obj), message = "Loading demo...")
+        if (is.null(obj)) return(NULL)
+        rv$obj <- obj
+        rv$source <- paste0("Demo: ", label)
+        mark_done(rv, "import")
+        log_step(log_rv, "Import",
+                 params = list(source = "demo", demo = input$demo_id),
+                 code = sprintf('obj <- %s', nm$source[nm$id == input$demo_id]))
+        shiny::showNotification("Demo data loaded.", type = "message")
+      } else {
+        load_into_hub(got$path, got$format,
+                      source_label = paste0("Demo: ", label),
+                      log_params = list(source = "demo", demo = input$demo_id),
+                      log_file = paste0("demo_", input$demo_id))
+      }
     })
 
     # (c) From URL

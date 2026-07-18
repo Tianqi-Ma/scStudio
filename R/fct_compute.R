@@ -26,7 +26,26 @@ qc_add_metrics <- function(obj, species = c("human", "mouse")) {
   obj[["percent.mt"]]   <- Seurat::PercentageFeatureSet(obj, pattern = mt)
   obj[["percent.ribo"]] <- Seurat::PercentageFeatureSet(obj, pattern = ribo)
   obj[["percent.hb"]]   <- Seurat::PercentageFeatureSet(obj, pattern = hb)
+  # Dissociation/stress-gene percentage (borrowed from scCancer): flags cells
+  # stressed during tissue dissociation. Uses genes present in the object.
+  diss <- dissociation_genes(species)
+  diss <- intersect(diss, rownames(obj))
+  if (length(diss) > 0) {
+    obj[["percent.diss"]] <- Seurat::PercentageFeatureSet(obj, features = diss)
+  }
   obj
+}
+
+#' Dissociation/stress gene set (van den Brink et al.), human or mouse
+#' @keywords internal
+dissociation_genes <- function(species = c("human", "mouse")) {
+  species <- match.arg(species)
+  g <- c("FOS", "FOSB", "JUN", "JUNB", "JUND", "EGR1", "ATF3", "HSPA1A",
+         "HSPA1B", "HSP90AB1", "HSPB1", "DNAJB1", "DNAJA1", "DUSP1", "IER2",
+         "NR4A1", "PPP1R15A", "SOCS3", "ZFP36", "UBC", "HSPA8", "JUN")
+  if (species == "mouse") g <- paste0(substr(g, 1, 1),
+                                      tolower(substring(g, 2)))
+  unique(g)
 }
 
 #' Adaptive (MAD-based) outlier flags from a metadata data.frame (pure)
@@ -219,4 +238,156 @@ annotate_singler <- function(obj, ref) {
   pred <- SingleR::SingleR(test = sce, ref = ref$data, labels = ref$labels)
   obj[["SingleR"]] <- pred$labels
   obj
+}
+
+# ============================================================================
+# scop engine wrappers.
+# Thin wrappers over scop's Run* API so the modules stay declarative. All are
+# gated by require_pkgs("scop") and wrapped in tryCatch. scop signatures are
+# verified at runtime on the user's machine; a few arg names may need tweaks
+# against the installed scop version (flagged in CHANGELOG/README).
+# ============================================================================
+
+#' Standard preprocessing (normalize + HVG + scale + linear reduction)
+#' @param method normalization: "LogNormalize"/"SCT"/"TFIDF"; hvf: vst/mvp/disp.
+#' @keywords internal
+sc_standard <- function(srt, normalization = "LogNormalize", hvf = "vst",
+                        nHVF = 2000, linear = "pca", npcs = 50) {
+  scop::Standard_SCP(srt, normalization_method = normalization,
+                     HVF_method = hvf, nHVF = nHVF,
+                     linear_reduction = linear, linear_reduction_dims = npcs)
+}
+
+#' Linear dimensionality reduction (PCA/ICA/NMF/MDS)
+#' @keywords internal
+sc_reduce <- function(srt, method = "pca", ndim = 50) {
+  scop::RunDimReduction(srt, prefix = method, reduction_method = method,
+                        ndim = ndim)
+}
+
+#' Batch integration via scop::Integration_SCP (many methods)
+#' @param method Uncorrected/Seurat/Harmony/scVI/scanorama/BBKNN/fastMNN/LIGER/CSS/Conos/ComBat
+#' @keywords internal
+sc_integrate <- function(srt, batch, method = "Harmony", nHVF = 2000) {
+  scop::Integration_SCP(srt, batch = batch, integration_method = method,
+                        nHVF = nHVF)
+}
+
+#' Non-linear embedding (UMAP/tSNE/DM/PHATE/FR/PaCMAP)
+#' @keywords internal
+sc_embed <- function(srt, method = "umap", reduction = "pca", dims = 30,
+                     n_neighbors = 30, min_dist = 0.3) {
+  scop::RunDimReduction(srt, prefix = method, reduction_method = method,
+                        reduction_use = reduction, dims_use = seq_len(dims),
+                        n.neighbors = n_neighbors, min.dist = min_dist)
+}
+
+#' Differential expression / markers via scop::RunDEtest
+#' @keywords internal
+sc_detest <- function(srt, group_by, test = "wilcox") {
+  scop::RunDEtest(srt, group_by = group_by, test.use = test)
+}
+
+#' Reference/label transfer annotation via scop::RunKNNPredict
+#' @keywords internal
+sc_annotate_knn <- function(srt, ref, ref_group, distance = "cosine") {
+  scop::RunKNNPredict(srt_query = srt, srt_ref = ref, ref_group = ref_group,
+                      distance_metric = distance)
+}
+
+#' Over-representation enrichment via scop::RunEnrichment
+#' @keywords internal
+sc_enrichment <- function(srt, group_by, db = "GO", species = "Homo_sapiens") {
+  scop::RunEnrichment(srt, group_by = group_by, db = db, species = species)
+}
+
+#' GSEA via scop::RunGSEA
+#' @keywords internal
+sc_gsea <- function(srt, group_by, db = "GO", species = "Homo_sapiens") {
+  scop::RunGSEA(srt, group_by = group_by, db = db, species = species)
+}
+
+#' Trajectory / pseudotime (Slingshot/Monocle2/Monocle3/PAGA/Palantir/WOT)
+#' @keywords internal
+sc_trajectory <- function(srt, method = "slingshot", group_by = NULL, ...) {
+  fun <- switch(tolower(method),
+                slingshot = scop::RunSlingshot,
+                monocle2  = scop::RunMonocle2,
+                monocle3  = scop::RunMonocle3,
+                paga      = scop::RunPAGA,
+                palantir  = scop::RunPalantir,
+                wot       = scop::RunWOT,
+                stop("Unknown trajectory method: ", method))
+  fun(srt, group.by = group_by, ...)
+}
+
+#' RNA velocity via scop::RunSCVELO (Python)
+#' @keywords internal
+sc_velocity <- function(srt, group_by = NULL, mode = "dynamical", ...) {
+  scop::RunSCVELO(srt, group_by = group_by, mode = mode, ...)
+}
+
+#' Dynamic features along pseudotime via scop::RunDynamicFeatures
+#' @keywords internal
+sc_dynamic <- function(srt, lineages, n_candidates = 200) {
+  scop::RunDynamicFeatures(srt, lineages = lineages, n_candidates = n_candidates)
+}
+
+#' Cell-cycle scoring (Seurat) + module scores (UCell/AddModuleScore)
+#' @keywords internal
+sc_cellcycle <- function(srt) {
+  cc <- Seurat::cc.genes.updated.2019
+  Seurat::CellCycleScoring(srt, s.features = cc$s.genes,
+                           g2m.features = cc$g2m.genes, set.ident = FALSE)
+}
+
+#' Signature module scoring; method "UCell" or "AddModuleScore"
+#' @param features Named list of gene sets.
+#' @keywords internal
+sc_modulescore <- function(srt, features, method = "UCell") {
+  if (method == "UCell" && has_pkg("UCell")) {
+    UCell::AddModuleScore_UCell(srt, features = features)
+  } else {
+    Seurat::AddModuleScore(srt, features = features, name = names(features))
+  }
+}
+
+#' Cell-cell communication (LIANA/CellChat/CellPhoneDB/NicheNet)
+#' @keywords internal
+sc_cellcomm <- function(srt, group_by, method = "liana", ...) {
+  method <- tolower(method)
+  if (method == "liana") {
+    if (!require_pkgs("liana", "Cell-cell communication")) return(NULL)
+    liana::liana_wrap(srt, idents_col = group_by, ...)
+  } else if (method == "cellchat") {
+    if (!require_pkgs("CellChat", "Cell-cell communication")) return(NULL)
+    cc <- CellChat::createCellChat(object = srt, group.by = group_by)
+    cc
+  } else {
+    stop("Cell-cell communication method '", method,
+         "' runs via Python/other setup; see docs.")
+  }
+}
+
+#' Malignant-cell / CNV estimation (CopyKAT / inferCNV / Numbat)
+#' @keywords internal
+sc_cnv <- function(srt, method = "copykat", ref_cells = NULL, ...) {
+  method <- tolower(method)
+  if (method == "copykat") {
+    if (!require_pkgs("copykat", "CNV / malignant cells")) return(NULL)
+    mat <- as.matrix(SeuratObject::LayerData(srt, layer = "counts"))
+    norm_names <- if (!is.null(ref_cells)) ref_cells else ""
+    copykat::copykat(rawmat = mat, norm.cell.names = norm_names, ...)
+  } else {
+    stop("CNV method '", method, "' requires its own setup (inferCNVpy/Numbat).")
+  }
+}
+
+#' Stemness score (mRNAsi-style signature)
+#' @keywords internal
+sc_stemness <- function(srt, features = NULL) {
+  if (is.null(features)) {
+    stop("Provide a stemness gene signature (features).")
+  }
+  sc_modulescore(srt, list(stemness = features))
 }
