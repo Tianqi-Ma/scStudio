@@ -138,7 +138,7 @@ mod_integrate_server <- function(id, rv, log_rv) {
       ggplot2::ggplot(df, ggplot2::aes(x = dim1, y = dim2,
                                        colour = color, text = text)) +
         ggplot2::geom_point(size = 0.5, alpha = 0.7) +
-        ggplot2::scale_colour_manual(values = scstudio_palette(nlevels(df$color)),
+        ggplot2::scale_colour_manual(values = sc_palette(nlevels(df$color)),
                                      name = batch) +
         ggplot2::labs(x = paste0(reduction, " 1"), y = paste0(reduction, " 2"),
                       title = "Batch mixing after integration / 整合后的批次混合") +

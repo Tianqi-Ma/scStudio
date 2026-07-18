@@ -162,7 +162,7 @@ mod_cluster_server <- function(id, rv, log_rv) {
         return(
           ggplot2::ggplot(df, ggplot2::aes(dim1, dim2, colour = factor(color), text = text)) +
             ggplot2::geom_point(size = 0.6, alpha = 0.75) +
-            ggplot2::scale_colour_manual(values = scstudio_palette(nlevels(cl)), name = "Cluster / 簇") +
+            ggplot2::scale_colour_manual(values = sc_palette(nlevels(cl)), name = "Cluster / 簇") +
             ggplot2::labs(x = paste0(toupper(red), " 1"), y = paste0(toupper(red), " 2"),
                           title = sprintf("Clusters on %s (resolution %s) / %s 上的聚类（分辨率 %s）",
                                           toupper(red), format(res$res_used),
@@ -180,7 +180,7 @@ mod_cluster_server <- function(id, rv, log_rv) {
       ggplot2::ggplot(counts, ggplot2::aes(x = cluster, y = n,
                                            fill = cluster, text = text)) +
         ggplot2::geom_col() +
-        ggplot2::scale_fill_manual(values = scstudio_palette(nlevels(counts$cluster)),
+        ggplot2::scale_fill_manual(values = sc_palette(nlevels(counts$cluster)),
                                    guide = "none") +
         ggplot2::labs(x = "Cluster", y = "Cells",
                       title = sprintf("Cluster sizes (resolution %s) / 簇大小（分辨率 %s）",

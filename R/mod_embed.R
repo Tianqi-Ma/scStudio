@@ -181,7 +181,7 @@ mod_embed_server <- function(id, rv, log_rv) {
         p <- ggplot2::ggplot(df, ggplot2::aes(x = dim1, y = dim2,
                                               colour = color, text = text)) +
           ggplot2::geom_point(size = 0.5, alpha = 0.7) +
-          ggplot2::scale_colour_manual(values = scstudio_palette(nlevels(df$color)),
+          ggplot2::scale_colour_manual(values = sc_palette(nlevels(df$color)),
                                        name = "cluster")
       } else {
         df$text <- sprintf("%s: (%.2f, %.2f)", reduction, df$dim1, df$dim2)

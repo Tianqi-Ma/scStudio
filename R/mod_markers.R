@@ -149,7 +149,7 @@ mod_markers_server <- function(id, rv, log_rv) {
         ggplot2::geom_col() +
         ggplot2::coord_flip() +
         ggplot2::facet_wrap(~cluster, scales = "free_y") +
-        ggplot2::scale_fill_manual(values = scstudio_palette(nlevels(d$cluster)),
+        ggplot2::scale_fill_manual(values = sc_palette(nlevels(d$cluster)),
                                    guide = "none") +
         ggplot2::labs(x = NULL, y = "avg log2 fold-change",
                       title = "Top marker genes per cluster") +

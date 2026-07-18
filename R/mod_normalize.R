@@ -120,7 +120,7 @@ mod_normalize_server <- function(id, rv, log_rv) {
       df$text <- sprintf("cell=%s\nUMIs=%s", df$cell,
                          format(df$nCount, big.mark = ","))
       ggplot2::ggplot(df, ggplot2::aes(x = log_count, text = text)) +
-        ggplot2::geom_histogram(bins = 50, fill = scstudio_palette(1), alpha = 0.85) +
+        ggplot2::geom_histogram(bins = 50, fill = sc_palette(1), alpha = 0.85) +
         ggplot2::labs(x = "Library size (log10 UMIs)", y = "Cells",
                       title = "Per-cell sequencing depth / 每个细胞的测序深度") +
         scstudio_theme()
