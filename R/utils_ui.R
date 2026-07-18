@@ -10,19 +10,19 @@
 #' @keywords internal
 NULL
 
-#' Bilingual text span (client-side language toggle, no dependencies)
+#' Bilingual text span (client-side, single language visible)
 #'
-#' Emits both English and Chinese; CSS shows one based on the `lang-zh` class on
-#' <body>, toggled by the header language switch. Use everywhere user-facing text
-#' appears so switching language needs no server round-trip.
+#' Renders ONE language at a time. Both strings are carried as `data-en` /
+#' `data-zh` attributes; only the active language is shown as the element's
+#' content. The header switch calls a small JS helper (see app.js) that swaps
+#' every `.i18n` element's innerHTML to the chosen language -- so at any moment
+#' only one language is on screen (never both), with no server round-trip.
 #'
 #' @param en,zh English and Chinese strings (may contain inline HTML).
 #' @param tag Wrapper tag function (default `shiny::tags$span`).
 #' @keywords internal
 i18n <- function(en, zh, tag = shiny::tags$span) {
-  tag(class = "i18n",
-      shiny::tags$span(class = "en", shiny::HTML(en)),
-      shiny::tags$span(class = "zh", shiny::HTML(zh)))
+  tag(class = "i18n", `data-en` = en, `data-zh` = zh, shiny::HTML(en))
 }
 
 #' Collapsible beginner explainer card ("What is this step?")

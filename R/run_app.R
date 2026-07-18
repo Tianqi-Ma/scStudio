@@ -25,6 +25,13 @@ run_app <- function(launch.browser = TRUE,
   old <- options(shiny.maxRequestSize = max_upload_mb * 1024^2)
   on.exit(options(old), add = TRUE)
 
+  # Serve the package's static assets (CSS/JS) at /scstudio/... Without this the
+  # stylesheet 404s and the app renders unstyled.
+  www <- app_sys("app", "www")
+  if (nzchar(www) && dir.exists(www)) {
+    shiny::addResourcePath("scstudio", www)
+  }
+
   app <- shiny::shinyApp(ui = app_ui, server = app_server)
   shiny::runApp(app, launch.browser = launch.browser, port = port, host = host)
 }

@@ -1,59 +1,48 @@
-#' Top-level server: shared state, step-status tracking, navigation
+#' Top-level server: shared state, grouped stepper, navigation
 #'
 #' A single reactive hub (`rv`) holds the working object, a per-step status map
-#' (used to colour the left navigator), and the reproducibility log. Each module
-#' reads `rv$obj`, does its work, writes the object back, and marks its step done.
+#' (colours the left navigator), and the reproducibility log. Each module reads
+#' `rv$obj`, does its work, writes it back, and marks its step done. Language is
+#' handled entirely client-side (app.js); theme via bslib input_dark_mode.
 #'
 #' @param input,output,session Standard Shiny server arguments.
 #' @keywords internal
 app_server <- function(input, output, session) {
 
-  rv <- shiny::reactiveValues(
-    obj    = NULL,
-    source = NULL,
-    status = list()   # step key -> TRUE once it has run successfully
-  )
+  rv <- shiny::reactiveValues(obj = NULL, source = NULL, status = list())
   log_rv <- shiny::reactiveVal(list())
 
-  # Ordered steps (must match app_ui) for rendering the navigator.
-  steps <- list(
-    list(v = "import",    n = 1,  en = "Import",       zh = "导入"),
-    list(v = "qc",        n = 2,  en = "QC",           zh = "质控"),
-    list(v = "doublet",   n = 3,  en = "Doublets",     zh = "去双细胞"),
-    list(v = "normalize", n = 4,  en = "Normalize",    zh = "归一化"),
-    list(v = "reduce",    n = 5,  en = "Features/PCA", zh = "特征/PCA"),
-    list(v = "integrate", n = 6,  en = "Integrate",    zh = "整合"),
-    list(v = "cluster",   n = 7,  en = "Cluster",      zh = "聚类"),
-    list(v = "embed",     n = 8,  en = "Embed",        zh = "降维图"),
-    list(v = "markers",   n = 9,  en = "Markers",      zh = "标志基因"),
-    list(v = "annotate",  n = 10, en = "Annotate",     zh = "注释"),
-    list(v = "viz",       n = 11, en = "Visualize",    zh = "可视化"),
-    list(v = "export",    n = 12, en = "Export",       zh = "导出")
-  )
-
-  # --- Left step navigator (status-coloured, clickable) ----------------------
+  # --- Grouped, status-coloured left navigator -------------------------------
   output$step_nav <- shiny::renderUI({
     current <- input$steps %||% "import"
     status  <- rv$status
-    items <- lapply(steps, function(s) {
-      state <- if (identical(s$v, current)) "current"
-               else if (isTRUE(status[[s$v]])) "done" else "todo"
-      shiny::tags$a(
-        class = paste("scstudio-navitem", state),
-        onclick = sprintf("Shiny.setInputValue('goto','%s',{priority:'event'})", s$v),
-        shiny::span(class = "scstudio-navdot"),
-        shiny::span(class = "scstudio-navnum", s$n),
-        i18n(s$en, s$zh)
-      )
-    })
-    shiny::div(class = "scstudio-nav", items)
+    phases  <- app_phases()
+    steps   <- app_steps()
+    # order phases by first appearance in steps
+    phase_order <- unique(vapply(steps, function(s) s$phase, character(1)))
+    children <- list()
+    for (ph in phase_order) {
+      lab <- phases[[ph]]
+      children[[length(children) + 1]] <-
+        shiny::div(class = "scstudio-phase", i18n(lab$en, lab$zh))
+      for (s in Filter(function(x) identical(x$phase, ph), steps)) {
+        state <- if (identical(s$v, current)) "current"
+                 else if (isTRUE(status[[s$v]])) "done" else "todo"
+        children[[length(children) + 1]] <- shiny::tags$a(
+          class = paste("scstudio-navitem", state),
+          onclick = sprintf("Shiny.setInputValue('goto','%s',{priority:'event'})", s$v),
+          shiny::span(class = "scstudio-navdot"),
+          shiny::span(class = "scstudio-navnum", s$n),
+          shiny::span(class = "scstudio-navlabel", i18n(s$en, s$zh))
+        )
+      }
+    }
+    shiny::div(class = "scstudio-nav", children)
   })
 
-  shiny::observeEvent(input$goto, {
-    bslib::nav_select("steps", input$goto)
-  })
+  shiny::observeEvent(input$goto, { bslib::nav_select("steps", input$goto) })
 
-  # --- Global dataset status (bottom of the sidebar) -------------------------
+  # --- Global dataset status (bottom of sidebar) -----------------------------
   output$global_status <- shiny::renderUI({
     obj <- rv$obj
     if (is.null(obj)) {
@@ -70,7 +59,7 @@ app_server <- function(input, output, session) {
     )
   })
 
-  # --- Wire modules; each returns nothing but updates rv (incl. rv$status) ----
+  # --- Wire modules ----------------------------------------------------------
   mod_import_server("import", rv, log_rv, parent = session)
   mod_qc_server("qc", rv, log_rv)
   mod_doublet_server("doublet", rv, log_rv)
@@ -89,18 +78,14 @@ app_server <- function(input, output, session) {
 #' @keywords internal
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
-#' Mark a pipeline step as completed (colours the navigator)
+#' Mark a pipeline step completed (colours the navigator)
 #' @param rv Shared hub. @param step Step key.
 #' @keywords internal
 mark_done <- function(rv, step) {
-  st <- rv$status
-  st[[step]] <- TRUE
-  rv$status <- st
-  invisible(TRUE)
+  st <- rv$status; st[[step]] <- TRUE; rv$status <- st; invisible(TRUE)
 }
 
 #' Small labelled status line for the sidebar
-#' @param label,value Character/UI.
 #' @keywords internal
 stat_line <- function(label, value) {
   shiny::div(class = "scstudio-statline",

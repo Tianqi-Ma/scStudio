@@ -1,105 +1,158 @@
-/* scStudio — clean, modern styling. Colours use Bootstrap CSS variables so the
-   whole UI adapts automatically to the dark (default) / light theme toggle. */
+/* ============================================================================
+   scStudio — blue-cyan research theme. Dark by default, light via toggle.
+   ========================================================================== */
 
-/* ---------- language toggle (client-side, no round-trip) ---------- */
-.i18n .zh { display: none; }
-body.lang-zh .i18n .en { display: none; }
-body.lang-zh .i18n .zh { display: inline; }
+/* ---- design tokens ---- */
+:root, [data-bs-theme="dark"] {
+  --sc-bg:      #0f141a;
+  --sc-panel:   #141b23;
+  --sc-card:    #1b2530;
+  --sc-border:  #28323d;
+  --sc-text:    #e6edf3;
+  --sc-muted:   #8b98a5;
+  --sc-accent:  #2f81c7;
+  --sc-accent2: #4f9fd0;
+  --sc-ok:      #3fb37f;
+  --sc-elev:    0 1px 3px rgba(0,0,0,.35);
+}
+[data-bs-theme="light"] {
+  --sc-bg:      #ffffff;
+  --sc-panel:   #f7f9fb;
+  --sc-card:    #ffffff;
+  --sc-border:  #e6e9ee;
+  --sc-text:    #1c2530;
+  --sc-muted:   #6b7785;
+  --sc-accent:  #2f81c7;
+  --sc-accent2: #2669a8;
+  --sc-ok:      #2f9e6d;
+  --sc-elev:    0 1px 3px rgba(0,0,0,.06);
+}
 
-/* ---------- top bar ---------- */
+body { background: var(--sc-bg); color: var(--sc-text); }
+
+/* ---- top bar ---- */
 .scstudio-topbar {
-  display: flex; align-items: center; justify-content: space-between; width: 100%;
+  display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem;
 }
 .scstudio-brand { display: inline-flex; align-items: baseline; gap: .5rem; }
-.scstudio-brand .scstudio-sub {
-  font-size: .72rem; color: var(--bs-secondary-color); font-weight: 400;
-}
-.scstudio-topright { display: inline-flex; align-items: center; gap: 1rem; }
+.scstudio-brand strong { font-size: 1.1rem; letter-spacing: .01em; }
+.scstudio-brand .scstudio-sub { font-size: .72rem; color: var(--sc-muted); }
+.scstudio-topright { display: inline-flex; align-items: center; gap: .8rem; }
 
-/* ---------- left step navigator ---------- */
-.scstudio-nav { display: flex; flex-direction: column; gap: 2px; }
+/* segmented language control */
+.scstudio-lang { display: inline-flex; border: 1px solid var(--sc-border); border-radius: 999px; overflow: hidden; }
+.scstudio-lang-btn {
+  border: 0; background: transparent; color: var(--sc-muted);
+  padding: .2rem .7rem; font-size: .8rem; font-weight: 600; cursor: pointer;
+}
+.scstudio-lang-btn.active { background: var(--sc-accent); color: #fff; }
+
+/* python-env status dot */
+.scstudio-pydot { display: inline-flex; align-items: center; gap: .35rem; font-size: .78rem; color: var(--sc-muted); }
+.scstudio-pydot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sc-muted); }
+.scstudio-pydot.ready::before { background: var(--sc-ok); }
+
+/* ---- left grouped stepper ---- */
+.scstudio-nav { display: flex; flex-direction: column; gap: 1px; padding-right: 2px; }
+.scstudio-phase {
+  font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--sc-muted); margin: .8rem .2rem .25rem;
+}
+.scstudio-phase:first-child { margin-top: .2rem; }
 .scstudio-navitem {
-  display: flex; align-items: center; gap: .55rem;
-  padding: .4rem .55rem; border-radius: .45rem; cursor: pointer;
-  color: var(--bs-body-color); text-decoration: none; font-size: .92rem;
-  border: 1px solid transparent;
+  display: flex; align-items: center; gap: .5rem; position: relative;
+  padding: .32rem .5rem .32rem .3rem; border-radius: .45rem; cursor: pointer;
+  color: var(--sc-text); text-decoration: none; font-size: .88rem; border: 1px solid transparent;
 }
-.scstudio-navitem:hover { background: var(--bs-tertiary-bg); }
-.scstudio-navnum {
-  font-size: .7rem; color: var(--bs-secondary-color); min-width: 1.1em; text-align: right;
-}
+.scstudio-navitem:hover { background: color-mix(in srgb, var(--sc-accent) 10%, transparent); }
+.scstudio-navnum { font-size: .7rem; color: var(--sc-muted); min-width: 1.4em; text-align: right; }
 .scstudio-navdot {
-  width: 9px; height: 9px; border-radius: 50%;
-  background: var(--bs-secondary-bg); border: 1px solid var(--bs-border-color); flex: 0 0 auto;
+  width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto;
+  background: transparent; border: 2px solid var(--sc-border);
 }
-/* done = blue, current = highlighted, todo = grey (default dot above) */
-.scstudio-navitem.done .scstudio-navdot { background: var(--bs-primary); border-color: var(--bs-primary); }
-.scstudio-navitem.done { color: var(--bs-primary); }
+.scstudio-navitem.done  .scstudio-navdot { background: var(--sc-accent); border-color: var(--sc-accent); }
+.scstudio-navitem.done  { color: var(--sc-accent2); }
 .scstudio-navitem.current {
-  background: color-mix(in srgb, var(--bs-primary) 16%, transparent);
-  border-color: color-mix(in srgb, var(--bs-primary) 40%, transparent);
-  font-weight: 600;
+  background: color-mix(in srgb, var(--sc-accent) 18%, transparent);
+  border-color: color-mix(in srgb, var(--sc-accent) 45%, transparent); font-weight: 600;
 }
-.scstudio-navitem.current .scstudio-navdot { background: var(--bs-primary); border-color: var(--bs-primary); }
+.scstudio-navitem.current .scstudio-navdot {
+  background: var(--sc-accent); border-color: var(--sc-accent2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sc-accent) 30%, transparent);
+}
+.scstudio-navlabel { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ---------- step header (title + slim summary strip) ---------- */
-.scstudio-stephead {
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
-}
-.scstudio-steptitle { font-weight: 700; font-size: 1.05rem; }
+/* ---- step header ---- */
+.scstudio-stephead { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.scstudio-steptitle { font-weight: 700; font-size: 1.06rem; }
+.scstudio-subtitle { color: var(--sc-muted); font-size: .82rem; }
 .scstudio-summarystrip { display: inline-flex; gap: .4rem; flex-wrap: wrap; }
-
-/* compact summary pills (replace big value boxes) */
 .scstudio-pill {
   display: inline-flex; align-items: baseline; gap: .35rem;
-  padding: .2rem .6rem; border-radius: 999px;
-  background: var(--bs-tertiary-bg); border: 1px solid var(--bs-border-color); font-size: .82rem;
+  padding: .18rem .6rem; border-radius: 999px;
+  background: color-mix(in srgb, var(--sc-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sc-accent) 30%, transparent); font-size: .8rem;
 }
-.scstudio-pill-label { color: var(--bs-secondary-color); }
+.scstudio-pill-label { color: var(--sc-muted); }
 .scstudio-pill-value { font-weight: 700; }
 
-/* ---------- plot-first main area ---------- */
-.scstudio-plotwrap {
-  min-height: 62vh; height: 100%; display: flex; flex-direction: column;
-}
+/* ---- plot-first main area ---- */
+.scstudio-step { height: 100%; background: var(--sc-card); border: 1px solid var(--sc-border); box-shadow: var(--sc-elev); }
+.scstudio-plotwrap { min-height: 64vh; height: 100%; display: flex; flex-direction: column; }
 .scstudio-plotwrap > * { flex: 1 1 auto; min-height: 0; }
-.scstudio-step { height: 100%; }
 
-/* ---------- explainer card (collapsed by default) ---------- */
-.scstudio-explainer .accordion-button { font-weight: 600; color: var(--bs-primary); }
+/* ---- explainer ---- */
+.scstudio-explainer .accordion-button { font-weight: 600; color: var(--sc-accent2); }
 .scstudio-example {
-  margin-top: .5rem; padding: .55rem .7rem; background: var(--bs-tertiary-bg);
-  border-left: 3px solid var(--bs-primary); border-radius: .3rem; font-size: .9rem;
+  margin-top: .5rem; padding: .55rem .7rem;
+  background: color-mix(in srgb, var(--sc-accent) 9%, transparent);
+  border-left: 3px solid var(--sc-accent); border-radius: .3rem; font-size: .9rem;
 }
-.scstudio-example-tag {
-  font-size: .68rem; font-weight: 700; text-transform: uppercase;
-  color: var(--bs-primary); margin-right: .4rem;
-}
+.scstudio-example-tag { font-size: .68rem; font-weight: 700; text-transform: uppercase; color: var(--sc-accent2); margin-right: .4rem; }
 
-/* ---------- controls ---------- */
-.scstudio-label { font-weight: 600; margin-bottom: .2rem; margin-top: .5rem; display: block; }
+/* ---- controls ---- */
+.scstudio-label { font-weight: 600; margin: .55rem 0 .2rem; display: block; }
 .scstudio-help {
   display: inline-flex; align-items: center; justify-content: center;
   width: 1.05rem; height: 1.05rem; margin-left: .35rem;
-  font-size: .72rem; font-weight: 700; color: #fff; background: var(--bs-secondary-color);
-  border-radius: 50%; cursor: help;
+  font-size: .72rem; font-weight: 700; color: #fff; background: var(--sc-muted); border-radius: 50%; cursor: help;
 }
 .scstudio-run { margin-top: .9rem; }
+.scstudio-note {
+  margin: .4rem 0; padding: .45rem .55rem; font-size: .8rem; color: var(--sc-muted);
+  background: var(--sc-panel); border: 1px solid var(--sc-border); border-radius: .35rem;
+}
 
-/* ---------- sidebar status ---------- */
-.scstudio-statline { display: flex; justify-content: space-between; padding: .15rem 0; font-size: .85rem; }
-.scstudio-statlabel { color: var(--bs-secondary-color); }
+/* ---- sidebar status ---- */
+.scstudio-statline { display: flex; justify-content: space-between; padding: .12rem 0; font-size: .82rem; }
+.scstudio-statlabel { color: var(--sc-muted); }
 .scstudio-statvalue { font-weight: 600; }
-.scstudio-status-empty { color: var(--bs-secondary-color); font-size: .85rem; }
-.scstudio-mini { font-size: .85rem; }
 .scstudio-warn {
-  margin-top: .5rem; padding: .45rem .55rem; font-size: .8rem;
-  background: color-mix(in srgb, #f0ad4e 18%, transparent);
-  border: 1px solid color-mix(in srgb, #f0ad4e 45%, transparent); border-radius: .35rem;
+  margin-top: .5rem; padding: .45rem .55rem; font-size: .78rem;
+  background: color-mix(in srgb, #f0ad4e 16%, transparent);
+  border: 1px solid color-mix(in srgb, #f0ad4e 42%, transparent); border-radius: .35rem;
+}
+.scstudio-placeholder {
+  padding: 2rem; text-align: center; color: var(--sc-muted);
+  background: var(--sc-panel); border: 1px dashed var(--sc-border); border-radius: .5rem;
 }
 
-/* ---------- placeholders ---------- */
-.scstudio-placeholder {
-  padding: 2rem; text-align: center; color: var(--bs-secondary-color);
-  background: var(--bs-tertiary-bg); border: 1px dashed var(--bs-border-color); border-radius: .5rem;
+/* ---- startup splash ---- */
+#scstudio-splash {
+  position: fixed; inset: 0; z-index: 9999; background: var(--sc-bg);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity .55s ease; opacity: 1;
 }
+#scstudio-splash.hide { opacity: 0; }
+#scstudio-splash-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#scstudio-splash-logo {
+  position: relative; z-index: 1; text-align: center;
+  opacity: 0; transform: translateY(8px); transition: opacity .6s ease, transform .6s ease;
+}
+#scstudio-splash-logo.show { opacity: 1; transform: translateY(0); }
+#scstudio-splash-logo .t {
+  font-size: 2.6rem; font-weight: 800; letter-spacing: .01em;
+  background: linear-gradient(90deg, #4f9fd0, #3fb37f); -webkit-background-clip: text;
+  background-clip: text; color: transparent;
+}
+#scstudio-splash-logo .s { color: var(--sc-muted); font-size: .9rem; margin-top: .25rem; }

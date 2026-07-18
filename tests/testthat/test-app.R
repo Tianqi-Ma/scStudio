@@ -4,13 +4,30 @@
 
 test_that("app_ui builds and renders to HTML", {
   ui <- app_ui()
-  html <- as.character(ui)
-  expect_true(nchar(html) > 1000)
-  # the twelve numbered steps are present in the navbar
-  for (lbl in c("Import", "QC", "Doublets", "Normalize", "Cluster",
-                "Embed", "Markers", "Annotate", "Visualize", "Export")) {
-    expect_match(html, lbl, fixed = TRUE)
+  rt <- htmltools::renderTags(ui)
+  html <- paste(as.character(rt$html), as.character(rt$head))
+  expect_true(nchar(html) > 2000)
+  # chrome: stylesheet + script served from the registered resource path,
+  # the splash overlay, the language switch, and the bilingual data attributes
+  expect_match(html, "scstudio/custom.css", fixed = TRUE)
+  expect_match(html, "scstudio/app.js", fixed = TRUE)
+  expect_match(html, "scstudio-splash", fixed = TRUE)
+  expect_match(html, "scStudioSetLang", fixed = TRUE)
+  expect_match(html, "data-zh=", fixed = TRUE)
+})
+
+test_that("app_steps and app_phases are consistent", {
+  steps <- app_steps()
+  phases <- app_phases()
+  expect_true(length(steps) >= 12)
+  # every step's phase must have a label
+  for (s in steps) {
+    expect_true(!is.null(phases[[s$phase]]), info = s$v)
+    expect_true(is.function(s$ui))
   }
+  # step values are unique
+  vals <- vapply(steps, function(s) s$v, character(1))
+  expect_equal(anyDuplicated(vals), 0L)
 })
 
 test_that("full server graph initialises with no data loaded", {
