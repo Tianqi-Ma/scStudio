@@ -236,7 +236,7 @@ mod_import_server <- function(id, rv, log_rv, parent = NULL) {
         df <- tab
       }
       df$text <- paste0(df$sample, ": ", format(df$n, big.mark = ","), " cells")
-      ggplot2::ggplot(df, ggplot2::aes(x = stats::reorder(sample, -n), y = n, text = text)) +
+      ggplot2::ggplot(df, ggplot2::aes(x = stats::reorder(sample, -n), y = n)) +
         ggplot2::geom_col(fill = sc_palette(1)) +
         ggplot2::labs(x = NULL, y = "Cells", title = "Cells per sample") +
         scstudio_theme() +

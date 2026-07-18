@@ -145,7 +145,7 @@ mod_markers_server <- function(id, rv, log_rv) {
       d$text <- sprintf("gene: %s\ncluster: %s\navg_log2FC: %.2f\np_val_adj: %.2g",
                         gene, as.character(d$cluster), lfc, padj)
       ggplot2::ggplot(d, ggplot2::aes(x = stats::reorder(gene_lab, avg_log2FC),
-                                      y = avg_log2FC, fill = cluster, text = text)) +
+                                      y = avg_log2FC, fill = cluster)) +
         ggplot2::geom_col() +
         ggplot2::coord_flip() +
         ggplot2::facet_wrap(~cluster, scales = "free_y") +

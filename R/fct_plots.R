@@ -59,22 +59,29 @@ preview_plot_ui <- function(id, height = "100%") {
 #' @keywords internal
 render_scop_plot <- function(plot_expr) {
   shiny::renderPlot({
+    # Build the plot object. req()/validate() (no data yet) stay silent.
     p <- tryCatch(
       plot_expr(),
-      # req()/validate() raise a silent condition when data isn't ready yet;
-      # let it through quietly instead of showing an empty "Plot error:".
       shiny.silent.error = function(e) NULL,
-      error = function(e) {
-        shiny::showNotification(paste("Plot error:", conditionMessage(e)),
-                                type = "error", duration = 10)
-        NULL
-      })
-    shiny::req(p)
-    if (methods::is(p, "Heatmap") || methods::is(p, "HeatmapList")) {
-      if (has_pkg("ComplexHeatmap")) ComplexHeatmap::draw(p) else print(p)
-    } else {
-      print(p)
+      error = function(e) structure(list(msg = conditionMessage(e)), class = "scstudio_plot_error"))
+    shiny::req(!is.null(p))
+
+    # Draw it. Any drawing error is turned into a readable message ON the canvas
+    # (and a toast) so the user never sees an opaque "[object Object]".
+    show_err <- function(msg) {
+      shiny::showNotification(paste("Plot error:", msg), type = "error", duration = 12)
+      op <- graphics::par(mar = c(0, 0, 0, 0)); on.exit(graphics::par(op), add = TRUE)
+      graphics::plot.new()
+      graphics::text(0.5, 0.5, paste0("Plot error:\n", msg), col = "#c1476b", cex = 1.1)
     }
+    if (inherits(p, "scstudio_plot_error")) { show_err(p$msg); return(invisible()) }
+    tryCatch({
+      if (methods::is(p, "Heatmap") || methods::is(p, "HeatmapList")) {
+        if (has_pkg("ComplexHeatmap")) ComplexHeatmap::draw(p) else print(p)
+      } else {
+        print(p)
+      }
+    }, error = function(e) show_err(conditionMessage(e)))
   })
 }
 

@@ -126,7 +126,7 @@ mod_qc_server <- function(id, rv, log_rv) {
                          ifelse(is.null(md$percent.mt), NA, md$percent.mt),
                          ifelse(md$keep, "kept", "flagged"))
       ggplot2::ggplot(md, ggplot2::aes(x = nCount_RNA, y = percent.mt,
-                                       colour = keep, text = text)) +
+                                       colour = keep)) +
         ggplot2::geom_point(size = 0.5, alpha = 0.6) +
         ggplot2::scale_x_log10() +
         ggplot2::scale_colour_manual(values = c(`TRUE` = "#3b6ea5", `FALSE` = "#c1476b"),

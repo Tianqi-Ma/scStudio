@@ -133,8 +133,7 @@ mod_doublet_server <- function(id, rv, log_rv) {
       md$cellid <- rownames(md)
       md$doublet_class <- ifelse(is.na(md$doublet_class), "singlet", md$doublet_class)
       md$text <- sprintf("score=%.3f\nclass=%s", md$doublet_score, md$doublet_class)
-      ggplot2::ggplot(md, ggplot2::aes(x = doublet_score, fill = doublet_class,
-                                       text = text)) +
+      ggplot2::ggplot(md, ggplot2::aes(x = doublet_score, fill = doublet_class)) +
         ggplot2::geom_histogram(bins = 50, alpha = 0.75, position = "identity") +
         ggplot2::scale_fill_manual(values = c(singlet = "#3b6ea5", doublet = "#c1476b"),
                                    name = NULL) +

@@ -245,7 +245,7 @@ mod_annotate_server <- function(id, rv, log_rv) {
                          ifelse(nzchar(df$explanation), df$explanation,
                                 "(no plain-language description available)"))
       cats <- length(unique(df$color))
-      ggplot2::ggplot(df, ggplot2::aes(x = dim1, y = dim2, colour = color, text = text)) +
+      ggplot2::ggplot(df, ggplot2::aes(x = dim1, y = dim2, colour = color)) +
         ggplot2::geom_point(size = 0.5, alpha = 0.7) +
         ggplot2::scale_colour_manual(values = sc_palette(cats), name = "Cell type") +
         ggplot2::labs(x = paste0(red, " 1"), y = paste0(red, " 2"),

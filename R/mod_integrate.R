@@ -136,7 +136,7 @@ mod_integrate_server <- function(id, rv, log_rv) {
       df$text <- sprintf("%s: %s\n%s: (%.2f, %.2f)",
                          batch, df$color, reduction, df$dim1, df$dim2)
       ggplot2::ggplot(df, ggplot2::aes(x = dim1, y = dim2,
-                                       colour = color, text = text)) +
+                                       colour = color)) +
         ggplot2::geom_point(size = 0.5, alpha = 0.7) +
         ggplot2::scale_colour_manual(values = sc_palette(nlevels(df$color)),
                                      name = batch) +

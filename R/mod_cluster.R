@@ -160,7 +160,7 @@ mod_cluster_server <- function(id, rv, log_rv) {
         df <- embedding_df(rv$obj, red, color_by = res$col)
         df$text <- sprintf("Cluster %s", df$color)
         return(
-          ggplot2::ggplot(df, ggplot2::aes(dim1, dim2, colour = factor(color), text = text)) +
+          ggplot2::ggplot(df, ggplot2::aes(dim1, dim2, colour = factor(color))) +
             ggplot2::geom_point(size = 0.6, alpha = 0.75) +
             ggplot2::scale_colour_manual(values = sc_palette(nlevels(cl)), name = "Cluster / 簇") +
             ggplot2::labs(x = paste0(toupper(red), " 1"), y = paste0(toupper(red), " 2"),
@@ -178,7 +178,7 @@ mod_cluster_server <- function(id, rv, log_rv) {
       counts$text <- sprintf("Cluster %s\n%s cells",
                              counts$cluster, format(counts$n, big.mark = ","))
       ggplot2::ggplot(counts, ggplot2::aes(x = cluster, y = n,
-                                           fill = cluster, text = text)) +
+                                           fill = cluster)) +
         ggplot2::geom_col() +
         ggplot2::scale_fill_manual(values = sc_palette(nlevels(counts$cluster)),
                                    guide = "none") +

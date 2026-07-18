@@ -114,7 +114,7 @@ mod_reduce_server <- function(id, rv, log_rv) {
       shiny::req(stdev)
       df <- data.frame(PC = seq_along(stdev), stdev = stdev)
       df$text <- sprintf("PC%d\nstdev=%.3f", df$PC, df$stdev)
-      ggplot2::ggplot(df, ggplot2::aes(x = PC, y = stdev, text = text)) +
+      ggplot2::ggplot(df, ggplot2::aes(x = PC, y = stdev)) +
         ggplot2::geom_line(colour = "#7d8b8f", linewidth = 0.4) +
         ggplot2::geom_point(colour = sc_palette(1), size = 1.4) +
         ggplot2::labs(x = "Principal component", y = "Standard deviation",
