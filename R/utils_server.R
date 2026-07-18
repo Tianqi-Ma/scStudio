@@ -37,6 +37,25 @@ require_pkgs <- function(pkgs, what = "this step") {
 #' @keywords internal
 has_pkg <- function(pkg) requireNamespace(pkg, quietly = TRUE)
 
+#' Render a data.frame as an interactive table (DT) or a plain fallback
+#'
+#' Pairs with `DT::dataTableOutput(id)` / `shiny::verbatimTextOutput(id)` chosen
+#' at UI-build time by whether DT is installed.
+#'
+#' @param data_fn A function returning a data.frame (may call req()).
+#' @keywords internal
+render_tbl_wrap <- function(data_fn) {
+  if (has_pkg("DT")) {
+    DT::renderDataTable({
+      df <- data_fn(); shiny::req(df)
+      DT::datatable(df, options = list(pageLength = 15, scrollX = TRUE),
+                    rownames = TRUE, class = "compact stripe")
+    })
+  } else {
+    shiny::renderPrint({ df <- data_fn(); shiny::req(df); utils::head(df, 20) })
+  }
+}
+
 #' Run an expression with a Shiny progress bar and graceful error notify
 #'
 #' Wraps a (possibly slow) compute call so the UI shows progress and any error

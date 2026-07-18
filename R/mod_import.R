@@ -98,12 +98,19 @@ mod_import_ui <- function(id) {
       run_button(ns("load_url"), "Fetch & load", "获取并加载")
     )
   )
+  tbl_out <- function(id) {
+    if (has_pkg("DT")) DT::dataTableOutput(id) else shiny::verbatimTextOutput(id)
+  }
   step_container(
     title     = list(en = "Import & inspect", zh = "导入与检查"),
     explainer = explainer,
     controls  = controls,
     summary   = shiny::uiOutput(ns("summary")),
-    preview   = preview_plot_ui(ns("preview"))
+    preview   = bslib::navset_card_tab(
+      bslib::nav_panel(i18n("Overview", "总览"),        preview_plot_ui(ns("ov_plot"))),
+      bslib::nav_panel(i18n("Cell metadata", "细胞元数据"), tbl_out(ns("meta_tbl"))),
+      bslib::nav_panel(i18n("Counts preview", "表达矩阵预览"), tbl_out(ns("counts_tbl")))
+    )
   )
 }
 
@@ -213,34 +220,34 @@ mod_import_server <- function(id, rv, log_rv, parent = NULL) {
                           i18n("No data yet. Tip: pick <b>Demo data</b> and click <b>Load demo data</b> to try it instantly.",
                                "尚无数据。提示：选择<b>演示数据</b>并点击<b>加载演示数据</b>即可立即试用。")))
       }
-      dims <- obj_dims(obj)
-      meta <- obj_meta(obj)
-      bslib::layout_columns(
-        col_widths = c(4, 4, 4),
-        stat_tile(i18n("Cells", "细胞"), format(dims$cells, big.mark = ",")),
-        stat_tile(i18n("Genes", "基因"), format(dims$genes, big.mark = ",")),
-        stat_tile(i18n("Metadata columns", "元数据列数"), ncol(meta))
+      ov <- data_overview(obj)
+      fmt <- function(x) if (is.na(x)) "-" else format(round(x), big.mark = ",")
+      shiny::div(
+        class = "scstudio-summarystrip",
+        stat_tile(i18n("Cells", "细胞"), fmt(ov$cells)),
+        stat_tile(i18n("Genes", "基因"), fmt(ov$genes)),
+        stat_tile(i18n("Median genes/cell", "中位基因/细胞"), fmt(ov$median_genes)),
+        stat_tile(i18n("Median UMIs/cell", "中位UMI/细胞"), fmt(ov$median_umi)),
+        stat_tile(i18n("Metadata cols", "元数据列"), ov$meta_cols)
       )
     })
 
-    output$preview <- render_preview_plot(function() {
-      obj <- rv$obj
-      shiny::req(obj)
-      meta <- obj_meta(obj)
-      batch <- guess_batch_col(meta)
-      if (is.null(batch)) {
-        df <- data.frame(sample = "all cells", n = obj_dims(obj)$cells)
-      } else {
-        tab <- as.data.frame(table(meta[[batch]]), stringsAsFactors = FALSE)
-        names(tab) <- c("sample", "n")
-        df <- tab
-      }
-      df$text <- paste0(df$sample, ": ", format(df$n, big.mark = ","), " cells")
-      ggplot2::ggplot(df, ggplot2::aes(x = stats::reorder(sample, -n), y = n)) +
-        ggplot2::geom_col(fill = sc_palette(1)) +
-        ggplot2::labs(x = NULL, y = "Cells", title = "Cells per sample") +
-        scstudio_theme() +
-        ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 40, hjust = 1))
+    # Overview tab: pre-QC survey plots (violins + top genes + count scatter).
+    output$ov_plot <- render_scop_plot(function() {
+      shiny::req(rv$obj)
+      overview_plots(rv$obj)
+    })
+
+    # Cell metadata tab: the real per-cell metadata table.
+    output$meta_tbl <- render_tbl_wrap(function() {
+      shiny::req(rv$obj)
+      md <- obj_meta(rv$obj)
+      utils::head(md, 5000)   # cap rows for the browser
+    })
+    # Counts preview tab: a small dense slice so users see the real matrix.
+    output$counts_tbl <- render_tbl_wrap(function() {
+      shiny::req(rv$obj)
+      counts_preview(rv$obj)
     })
   })
 }

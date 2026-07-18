@@ -65,6 +65,7 @@ Suggests:
     future,
     progressr,
     ggrastr,
+    patchwork,
     scattermore,
     SeuratDisk,
     knitr,

@@ -12,6 +12,9 @@ app_server <- function(input, output, session) {
   rv <- shiny::reactiveValues(obj = NULL, source = NULL, status = list())
   log_rv <- shiny::reactiveVal(list())
 
+  # --- Shared "export current data" (available on every step) ----------------
+  register_exports(input, output, session, rv)
+
   # --- Grouped, status-coloured left navigator -------------------------------
   output$step_nav <- shiny::renderUI({
     current <- input$steps %||% "import"
