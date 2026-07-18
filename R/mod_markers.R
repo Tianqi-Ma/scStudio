@@ -45,6 +45,7 @@ mod_markers_ui <- function(id) {
     run_button(ns("run"), "Find markers")
   )
   step_container(
+    title     = list(en = "Marker genes", zh = "标志基因"),
     explainer = explainer,
     controls  = controls,
     summary   = shiny::uiOutput(ns("summary")),
@@ -71,6 +72,7 @@ mod_markers_server <- function(id, rv, log_rv) {
       if (is.null(df)) return(NULL)
       markers(df)
       rv$markers <- df
+      mark_done(rv, "markers")
       log_step(log_rv, "Markers",
                params = list(test = input$test, logfc = input$logfc,
                              min_pct = input$min_pct, only_pos = input$only_pos),

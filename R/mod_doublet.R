@@ -41,7 +41,8 @@ mod_doublet_ui <- function(id) {
     shiny::numericInput(ns("threshold"), NULL, value = NA, min = 0, max = 1, step = 0.05),
     run_button(ns("run"), "Detect doublets")
   )
-  step_container(explainer, controls,
+  step_container(title = list(en = "Doublet removal", zh = "去除双细胞"),
+                 explainer = explainer, controls = controls,
                  summary = shiny::uiOutput(ns("summary")),
                  preview = preview_plot_ui(ns("preview")))
 }
@@ -76,6 +77,7 @@ mod_doublet_server <- function(id, rv, log_rv) {
       res$after <- ncol(obj)
       res$action <- action
       rv$obj <- obj
+      mark_done(rv, "doublet")
       log_step(log_rv, "Doublet removal",
                params = list(method = input$method, action = action,
                              threshold = thr),

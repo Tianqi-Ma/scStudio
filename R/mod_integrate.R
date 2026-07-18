@@ -35,7 +35,8 @@ mod_integrate_ui <- function(id) {
                          "CCA" = "CCA", "RPCA" = "RPCA")),
     run_button(ns("run"), "Run integration")
   )
-  step_container(explainer, controls,
+  step_container(title = list(en = "Batch integration", zh = "批次整合"),
+                 explainer = explainer, controls = controls,
                  summary = shiny::uiOutput(ns("summary")),
                  preview = preview_plot_ui(ns("preview")))
 }
@@ -73,6 +74,7 @@ mod_integrate_server <- function(id, rv, log_rv) {
       res$done   <- TRUE
       res$method <- method
       res$batch  <- batch
+      mark_done(rv, "integrate")
       log_step(log_rv, "Integration",
                params = list(method = method, batch = batch),
                code = sprintf("obj <- integrate_obj(obj, batch = '%s', method = '%s')",

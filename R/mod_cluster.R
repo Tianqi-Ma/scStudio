@@ -44,7 +44,8 @@ mod_cluster_ui <- function(id) {
     shiny::textInput(ns("resolutions"), NULL, value = "0.2,0.5,0.8,1.0"),
     run_button(ns("run"), "Run clustering")
   )
-  step_container(explainer, controls,
+  step_container(title = list(en = "Clustering", zh = "聚类"),
+                 explainer = explainer, controls = controls,
                  summary = shiny::uiOutput(ns("summary")),
                  preview = preview_plot_ui(ns("preview")))
 }
@@ -99,6 +100,7 @@ mod_cluster_server <- function(id, rv, log_rv) {
       res$col        <- "seurat_clusters"
       res$res_used   <- last_res
       res$n_clusters <- if (is.null(clusters)) NA_integer_ else nlevels(factor(clusters))
+      mark_done(rv, "cluster")
       log_step(log_rv, "Clustering",
                params = list(method = input$method, algorithm = algorithm,
                              reduction = reduction, dims = dims,
@@ -129,6 +131,25 @@ mod_cluster_server <- function(id, rv, log_rv) {
       md <- obj_meta(rv$obj)
       shiny::req(res$col %in% colnames(md))
       cl <- factor(md[[res$col]])
+
+      # If a 2D embedding already exists, show clusters on the map (most useful).
+      red <- if (has_reduction(rv$obj, "umap")) "umap"
+             else if (has_reduction(rv$obj, "tsne")) "tsne" else NULL
+      if (!is.null(red)) {
+        df <- embedding_df(rv$obj, red, color_by = res$col)
+        df$text <- sprintf("Cluster %s", df$color)
+        return(
+          ggplot2::ggplot(df, ggplot2::aes(dim1, dim2, colour = factor(color), text = text)) +
+            ggplot2::geom_point(size = 0.6, alpha = 0.75) +
+            ggplot2::scale_colour_manual(values = scstudio_palette(nlevels(cl)), name = "Cluster") +
+            ggplot2::labs(x = paste0(toupper(red), " 1"), y = paste0(toupper(red), " 2"),
+                          title = sprintf("Clusters on %s (resolution %s)",
+                                          toupper(red), format(res$res_used))) +
+            scstudio_theme()
+        )
+      }
+
+      # No embedding yet: show cluster sizes and point users to the Embed step.
       counts <- as.data.frame(table(cluster = cl), stringsAsFactors = FALSE)
       names(counts) <- c("cluster", "n")
       counts$cluster <- factor(counts$cluster, levels = levels(cl))
@@ -140,8 +161,8 @@ mod_cluster_server <- function(id, rv, log_rv) {
         ggplot2::scale_fill_manual(values = scstudio_palette(nlevels(counts$cluster)),
                                    guide = "none") +
         ggplot2::labs(x = "Cluster", y = "Cells",
-                      title = sprintf("Cluster sizes (resolution %s)",
-                                      format(res$res_used))) +
+                      title = sprintf("Cluster sizes (resolution %s)", format(res$res_used)),
+                      caption = "No 2D map yet - run step 8 (Embed) to see clusters on a UMAP.") +
         scstudio_theme()
     })
   })

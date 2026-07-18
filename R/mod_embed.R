@@ -47,7 +47,8 @@ mod_embed_ui <- function(id) {
     ),
     run_button(ns("run"), "Run embedding")
   )
-  step_container(explainer, controls,
+  step_container(title = list(en = "Embedding (UMAP / t-SNE)", zh = "降维可视化"),
+                 explainer = explainer, controls = controls,
                  summary = shiny::uiOutput(ns("summary")),
                  preview = preview_plot_ui(ns("preview")))
 }
@@ -100,6 +101,7 @@ mod_embed_server <- function(id, rv, log_rv) {
       } else {
         sprintf("dims=%s", dims)
       }
+      mark_done(rv, "embed")
       log_step(log_rv, "Embedding",
                params = list(method = method, reduction = reduction, dims = dims,
                              n_neighbors = n_neighbors, min_dist = min_dist,

@@ -45,7 +45,8 @@ mod_qc_ui <- function(id) {
     ),
     run_button(ns("run"), "Compute & filter")
   )
-  step_container(explainer, controls,
+  step_container(title = list(en = "Quality control", zh = "质量控制"),
+                 explainer = explainer, controls = controls,
                  summary = shiny::uiOutput(ns("summary")),
                  preview = preview_plot_ui(ns("preview")))
 }
@@ -75,6 +76,7 @@ mod_qc_server <- function(id, rv, log_rv) {
       if (is.null(obj)) return(NULL)
       res$after <- ncol(obj)
       rv$obj <- obj
+      mark_done(rv, "qc")
       log_step(log_rv, "QC",
                params = list(method = input$method, species = input$species,
                              nmad_lib = input$nmad_lib, nmad_mt = input$nmad_mt),

@@ -38,6 +38,7 @@ mod_export_ui <- function(id) {
     shiny::downloadButton(ns("download_script"), "Download R script", class = "w-100")
   )
   step_container(
+    title     = list(en = "Export & reproducibility", zh = "导出与复现"),
     explainer = explainer,
     controls  = controls,
     summary   = shiny::uiOutput(ns("summary")),

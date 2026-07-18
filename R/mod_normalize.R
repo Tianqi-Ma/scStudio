@@ -39,7 +39,8 @@ mod_normalize_ui <- function(id) {
     ),
     run_button(ns("run"), "Normalize")
   )
-  step_container(explainer, controls,
+  step_container(title = list(en = "Normalization", zh = "归一化"),
+                 explainer = explainer, controls = controls,
                  summary = shiny::uiOutput(ns("summary")),
                  preview = preview_plot_ui(ns("preview")))
 }
@@ -66,6 +67,7 @@ mod_normalize_server <- function(id, rv, log_rv) {
       res$done <- TRUE
       res$method <- method
       res$scale_factor <- sf
+      mark_done(rv, "normalize")
       log_step(log_rv, "Normalization",
                params = list(method = method,
                              scale.factor = if (method == "LogNormalize") sf else NA),

@@ -64,6 +64,7 @@ mod_annotate_ui <- function(id) {
     )
   )
   step_container(
+    title     = list(en = "Cell-type annotation", zh = "细胞类型注释"),
     explainer = explainer,
     controls  = controls,
     summary   = shiny::uiOutput(ns("summary")),
@@ -120,6 +121,7 @@ mod_annotate_server <- function(id, rv, log_rv) {
       }
       obj$celltype <- unname(labels[idents])
       rv$obj <- obj
+      mark_done(rv, "annotate")
       log_step(log_rv, "Annotate (manual)",
                params = as.list(labels),
                code = c("labels <- c(  # cluster -> cell type",
@@ -147,6 +149,7 @@ mod_annotate_server <- function(id, rv, log_rv) {
       }, message = "Running SingleR (may download a reference)...")
       if (is.null(obj)) return(NULL)
       rv$obj <- obj
+      mark_done(rv, "annotate")
       log_step(log_rv, "Annotate (SingleR)",
                params = list(reference = input$ref),
                code = c(sprintf('ref <- celldex::%s()', input$ref),
@@ -169,6 +172,7 @@ mod_annotate_server <- function(id, rv, log_rv) {
       }, message = "Running Azimuth (needs internet)...")
       if (is.null(obj)) return(NULL)
       rv$obj <- obj
+      mark_done(rv, "annotate")
       log_step(log_rv, "Annotate (Azimuth)",
                params = list(reference = "pbmcref"),
                code = c('obj <- Azimuth::RunAzimuth(obj, reference = "pbmcref")',

@@ -48,6 +48,7 @@ mod_viz_ui <- function(id) {
     shiny::downloadButton(ns("download"), "Download plot", class = "w-100")
   )
   step_container(
+    title     = list(en = "Visualize", zh = "可视化"),
     explainer = explainer,
     controls  = controls,
     summary   = shiny::uiOutput(ns("summary")),

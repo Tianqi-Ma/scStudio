@@ -80,6 +80,7 @@ mod_import_ui <- function(id) {
     )
   )
   step_container(
+    title     = list(en = "Import & inspect", zh = "导入与检查"),
     explainer = explainer,
     controls  = controls,
     summary   = shiny::uiOutput(ns("summary")),
@@ -118,6 +119,7 @@ mod_import_server <- function(id, rv, log_rv, parent = NULL) {
       if (is.null(obj)) return(invisible(NULL))
       rv$obj    <- obj
       rv$source <- source_label
+      mark_done(rv, "import")
       log_step(log_rv, "Import",
                params = log_params,
                code = sprintf('obj <- %s',

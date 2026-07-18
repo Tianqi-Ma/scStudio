@@ -41,7 +41,8 @@ mod_reduce_ui <- function(id) {
     shiny::numericInput(ns("npcs"), NULL, value = 50, min = 2, max = 200, step = 1),
     run_button(ns("run"), "Select features & run PCA")
   )
-  step_container(explainer, controls,
+  step_container(title = list(en = "Feature selection & PCA", zh = "特征选择与 PCA"),
+                 explainer = explainer, controls = controls,
                  summary = shiny::uiOutput(ns("summary")),
                  preview = preview_plot_ui(ns("preview")))
 }
@@ -68,6 +69,7 @@ mod_reduce_server <- function(id, rv, log_rv) {
                                    error = function(e) character(0)))
       res$stdev <- tryCatch(obj@reductions$pca@stdev, error = function(e) NULL)
       res$npcs <- length(res$stdev)
+      mark_done(rv, "reduce")
       log_step(log_rv, "Feature selection & PCA",
                params = list(hvg_method = hvg_method, n_hvg = n_hvg, npcs = npcs),
                code = sprintf(paste0(
