@@ -70,9 +70,7 @@ app_ui <- function() {
     shiny::tags$head(
       shiny::tags$link(rel = "stylesheet", type = "text/css", href = "www/custom.css"),
       shiny::tags$script(shiny::HTML(
-        "$(document).on('shiny:inputchanged', function(e){",
-        " if(e.name==='lang_zh'){ document.body.classList.toggle('lang-zh', !!e.value); }",
-        "});"
+        "$(document).on('shiny:inputchanged', function(e){ if(e.name==='lang_zh'){ document.body.classList.toggle('lang-zh', !!e.value); } });"
       ))
     ),
     main

@@ -12,34 +12,51 @@ NULL
 mod_reduce_ui <- function(id) {
   ns <- shiny::NS(id)
   explainer <- explainer_card(
-    title = "Feature selection & PCA",
-    what = "Select the most informative genes (highly variable features), then run
+    title = list(en = "Feature selection & PCA", zh = "特征选择与 PCA"),
+    what = list(
+      en = "Select the most informative genes (highly variable features), then run
             <b>PCA</b> to summarise them as a few principal components.",
-    why  = "Most genes vary little between cells and just add noise. Focusing on
+      zh = "选出信息量最大的基因（高变基因），再运行 <b>PCA</b> 将它们概括为少数几个主成分。"),
+    why  = list(
+      en = "Most genes vary little between cells and just add noise. Focusing on
             highly variable genes and compressing them with PCA makes clustering
             and embedding faster and cleaner.",
-    how  = "Choose how variable genes are ranked, how many to keep, and how many
+      zh = "大多数基因在细胞间变化很小，只会增加噪声。聚焦高变基因并用 PCA 压缩它们，
+            能让聚类和嵌入更快、更干净。"),
+    how  = list(
+      en = "Choose how variable genes are ranked, how many to keep, and how many
             principal components to compute. The elbow plot on the right shows how
             much variation each component captures &mdash; keep components before the
             curve flattens.",
-    example = "From 20,000 genes you keep ~2,000 variable ones, then summarise them
-               as 50 PCs; the first ~20 usually carry the real structure."
+      zh = "选择高变基因的排序方式、保留多少个，以及要计算多少个主成分。右侧的肘部图显示
+            每个主成分捕获了多少变异 &mdash; 保留曲线变平之前的主成分。"),
+    example = list(
+      en = "From 20,000 genes you keep ~2,000 variable ones, then summarise them
+               as 50 PCs; the first ~20 usually carry the real structure.",
+      zh = "从 20,000 个基因中保留约 2,000 个高变基因，再概括为 50 个主成分；
+               通常前约 20 个承载了真正的结构。")
   )
   controls <- shiny::tagList(
     label_with_help("HVG method",
-                    "How variable genes are ranked. vst = variance-stabilizing (recommended); mvp/dispersion = mean-variance/dispersion based."),
+                    "How variable genes are ranked. vst = variance-stabilizing (recommended); mvp/dispersion = mean-variance/dispersion based.",
+                    "高变基因方法",
+                    "高变基因的排序方式。vst = 方差稳定（推荐）；mvp/dispersion = 基于均值-方差/离散度。"),
     shiny::selectInput(ns("hvg_method"), NULL,
                        choices = c("vst" = "vst", "mvp" = "mvp",
                                    "dispersion" = "dispersion"),
                        selected = "vst"),
     label_with_help("Number of variable genes",
-                    "How many highly variable genes to keep. 2,000 is a common default."),
+                    "How many highly variable genes to keep. 2,000 is a common default.",
+                    "高变基因数量",
+                    "保留多少个高变基因。2,000 是常用默认值。"),
     shiny::sliderInput(ns("n_hvg"), NULL, min = 500, max = 5000, value = 2000,
                        step = 100),
     label_with_help("Number of principal components",
-                    "How many PCs to compute. 50 is a common default; you rarely use them all downstream."),
+                    "How many PCs to compute. 50 is a common default; you rarely use them all downstream.",
+                    "主成分数量",
+                    "计算多少个主成分。50 是常用默认值；下游很少会全部用到。"),
     shiny::numericInput(ns("npcs"), NULL, value = 50, min = 2, max = 200, step = 1),
-    run_button(ns("run"), "Select features & run PCA")
+    run_button(ns("run"), "Select features & run PCA", "选择特征并运行 PCA")
   )
   step_container(title = list(en = "Feature selection & PCA", zh = "特征选择与 PCA"),
                  explainer = explainer, controls = controls,
@@ -83,11 +100,12 @@ mod_reduce_server <- function(id, rv, log_rv) {
 
     output$summary <- shiny::renderUI({
       if (!isTRUE(res$done)) return(shiny::div(class = "scstudio-placeholder",
-                                               "Set parameters and click Select features & run PCA."))
+                                               i18n("Set parameters and click Select features & run PCA.",
+                                                    "设置参数并点击选择特征并运行 PCA。")))
       bslib::layout_columns(
         col_widths = c(6, 6),
-        stat_tile("Variable genes", format(res$n_hvg, big.mark = ",")),
-        stat_tile("Principal components", format(res$npcs, big.mark = ","))
+        stat_tile(i18n("Variable genes", "高变基因"), format(res$n_hvg, big.mark = ",")),
+        stat_tile(i18n("Principal components", "主成分"), format(res$npcs, big.mark = ","))
       )
     })
 
@@ -100,7 +118,7 @@ mod_reduce_server <- function(id, rv, log_rv) {
         ggplot2::geom_line(colour = "#7d8b8f", linewidth = 0.4) +
         ggplot2::geom_point(colour = scstudio_palette(1), size = 1.4) +
         ggplot2::labs(x = "Principal component", y = "Standard deviation",
-                      title = "PCA elbow plot") +
+                      title = "PCA elbow plot / PCA 肘部图") +
         scstudio_theme()
     })
   })

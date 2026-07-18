@@ -12,30 +12,44 @@ NULL
 mod_export_ui <- function(id) {
   ns <- shiny::NS(id)
   explainer <- explainer_card(
-    title = "Export & reproducibility",
-    what = "Download your processed object and a script that reproduces the whole
+    title = list(en = "Export & reproducibility", zh = "导出与可复现"),
+    what = list(
+      en = "Download your processed object and a script that reproduces the whole
             analysis.",
-    why  = "Reproducibility is the point: anyone (including future you) should be
+      zh = "下载你处理后的对象，以及一个可复现整个分析流程的脚本。"),
+    why  = list(
+      en = "Reproducibility is the point: anyone (including future you) should be
             able to regenerate these results from the raw data and the script.",
-    how  = "Choose <b>RDS</b> to reload the object in R/Seurat, or <b>.h5ad</b> for
+      zh = "可复现是关键：任何人（包括未来的你）都应能凭原始数据和脚本重现这些结果。"),
+    how  = list(
+      en = "Choose <b>RDS</b> to reload the object in R/Seurat, or <b>.h5ad</b> for
             Python/Scanpy (best-effort, needs SeuratDisk). The R script lists every
             step in order -- you only need to set the input path where it says so.",
-    example = "Re-run with <code>source(\"scstudio_analysis.R\")</code> after
-               editing the <code>input_path</code> line at the top."
+      zh = "选择 <b>RDS</b> 以便在 R/Seurat 中重新载入对象，或选择 <b>.h5ad</b> 用于 Python/Scanpy（尽力而为，需要 SeuratDisk）。该 R 脚本会按顺序列出每一步，你只需在提示处设置输入路径。"),
+    example = list(
+      en = "Re-run with <code>source(\"scstudio_analysis.R\")</code> after
+               editing the <code>input_path</code> line at the top.",
+      zh = "在编辑顶部的 <code>input_path</code> 行之后，使用 <code>source(\"scstudio_analysis.R\")</code> 重新运行。")
   )
   controls <- shiny::tagList(
     label_with_help("Object format",
-                    "RDS = native R/Seurat. .h5ad = AnnData for Python/Scanpy (needs SeuratDisk). Figures = guidance only."),
+                    "RDS = native R/Seurat. .h5ad = AnnData for Python/Scanpy (needs SeuratDisk). Figures = guidance only.",
+                    "对象格式",
+                    "RDS = 原生 R/Seurat。.h5ad = 用于 Python/Scanpy 的 AnnData（需要 SeuratDisk）。Figures = 仅为说明。"),
     shiny::selectInput(ns("fmt"), NULL,
                        choices = c("RDS (.rds)"   = "rds",
                                    "AnnData (.h5ad)" = "h5ad",
                                    "Figures (note)"  = "figures"),
                        selected = "rds"),
-    shiny::downloadButton(ns("download_obj"), "Download object", class = "w-100"),
+    shiny::downloadButton(ns("download_obj"),
+                          i18n("Download object", "下载对象"), class = "w-100"),
     shiny::tags$hr(),
     label_with_help("Reproducibility script",
-                    "A commented R script rebuilding every step you ran, in order."),
-    shiny::downloadButton(ns("download_script"), "Download R script", class = "w-100")
+                    "A commented R script rebuilding every step you ran, in order.",
+                    "可复现脚本",
+                    "一个带注释的 R 脚本，按顺序重建你运行过的每一步。"),
+    shiny::downloadButton(ns("download_script"),
+                          i18n("Download R script", "下载 R 脚本"), class = "w-100")
   )
   step_container(
     title     = list(en = "Export & reproducibility", zh = "导出与复现"),
@@ -84,10 +98,11 @@ mod_export_server <- function(id, rv, log_rv) {
       entries <- log_rv()
       if (is.null(entries) || !length(entries)) {
         return(shiny::div(class = "scstudio-placeholder",
-                          "No steps recorded yet. Run some analysis steps first."))
+                          i18n("No steps recorded yet. Run some analysis steps first.",
+                               "尚未记录任何步骤。请先运行一些分析步骤。")))
       }
       shiny::tagList(
-        stat_tile("Steps performed", length(entries)),
+        stat_tile(i18n("Steps performed", "已执行步骤数"), length(entries)),
         shiny::tags$ol(class = "scstudio-steps",
           lapply(entries, function(e) {
             shiny::tags$li(shiny::tags$b(e$step),
@@ -99,9 +114,11 @@ mod_export_server <- function(id, rv, log_rv) {
 
     output$preview <- shiny::renderUI({
       shiny::div(class = "scstudio-note",
-                 "No plot for this step. Use the buttons on the left to download ",
-                 "your processed object and the reproducibility script. ",
-                 "Remember to set input/output paths when you re-run the script.")
+                 i18n(paste0("No plot for this step. Use the buttons on the left to download ",
+                             "your processed object and the reproducibility script. ",
+                             "Remember to set input/output paths when you re-run the script."),
+                      paste0("这一步没有图表。请使用左侧的按钮下载你处理后的对象和可复现脚本。",
+                             "重新运行脚本时，记得设置输入/输出路径。")))
     })
 
     output$download_obj <- shiny::downloadHandler(

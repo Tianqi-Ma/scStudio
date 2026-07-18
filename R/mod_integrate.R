@@ -13,27 +13,40 @@ NULL
 mod_integrate_ui <- function(id) {
   ns <- shiny::NS(id)
   explainer <- explainer_card(
-    title = "Batch integration (optional)",
-    what = "Correct for technical differences between samples/batches so that the
+    title = list(en = "Batch integration (optional)", zh = "批次整合（可选）"),
+    what = list(
+      en = "Correct for technical differences between samples/batches so that the
             same cell type from different samples lines up.",
-    why  = "Without correction, cells often cluster by their sample of origin
+      zh = "校正样本/批次之间的技术差异，使来自不同样本的相同细胞类型对齐。"),
+    why  = list(
+      en = "Without correction, cells often cluster by their sample of origin
             rather than by biology, which confounds downstream clustering.",
-    how  = "Pick the metadata column that identifies your batch/sample, then a
+      zh = "若不校正，细胞常常按来源样本而非生物学聚在一起，从而干扰下游聚类。"),
+    how  = list(
+      en = "Pick the metadata column that identifies your batch/sample, then a
             method. <b>Harmony</b> is fast and a good default. Choose <b>none</b>
             if you have a single sample or want to inspect the raw structure.",
-    example = "Cells from two samples forming two separate clumps that should
-               overlap — integration aligns them."
+      zh = "选择标识批次/样本的元数据列，再选择方法。<b>Harmony</b> 快速且是不错的默认。
+            若只有单个样本或想查看未校正的原始结构，请选择 <b>none</b>。"),
+    example = list(
+      en = "Cells from two samples forming two separate clumps that should
+               overlap — integration aligns them.",
+      zh = "来自两个样本、本应重叠却形成两个独立团块的细胞——整合会将它们对齐。")
   )
   controls <- shiny::tagList(
     label_with_help("Batch / sample column",
-                    "The metadata column that identifies each sample or batch."),
+                    "The metadata column that identifies each sample or batch.",
+                    "批次/样本列",
+                    "标识每个样本或批次的元数据列。"),
     shiny::uiOutput(ns("batch_ui")),
     label_with_help("Method",
-                    "Harmony is fast and robust. CCA/RPCA are Seurat anchor-based. none = no correction."),
+                    "Harmony is fast and robust. CCA/RPCA are Seurat anchor-based. none = no correction.",
+                    "方法",
+                    "Harmony 快速且稳健。CCA/RPCA 是 Seurat 基于锚点的方法。none = 不做校正。"),
     shiny::selectInput(ns("method"), NULL,
                        c("none (no correction)" = "none", "Harmony" = "harmony",
                          "CCA" = "CCA", "RPCA" = "RPCA")),
-    run_button(ns("run"), "Run integration")
+    run_button(ns("run"), "Run integration", "运行整合")
   )
   step_container(title = list(en = "Batch integration", zh = "批次整合"),
                  explainer = explainer, controls = controls,
@@ -52,7 +65,8 @@ mod_integrate_server <- function(id, rv, log_rv) {
       cols <- obj_meta_cols(rv$obj)
       if (length(cols) == 0) {
         return(shiny::div(class = "scstudio-placeholder",
-                          "Load a dataset to choose a batch column."))
+                          i18n("Load a dataset to choose a batch column.",
+                               "加载数据集以选择批次列。")))
       }
       default <- guess_batch_col(obj_meta(rv$obj))
       if (is.null(default)) default <- cols[1]
@@ -88,13 +102,15 @@ mod_integrate_server <- function(id, rv, log_rv) {
     output$summary <- shiny::renderUI({
       if (!isTRUE(res$done)) {
         return(shiny::div(class = "scstudio-placeholder",
-                          "Choose a batch column and method, then click Run integration."))
+                          i18n("Choose a batch column and method, then click Run integration.",
+                               "选择批次列和方法，然后点击运行整合。")))
       }
       bslib::layout_columns(
         col_widths = c(4, 4, 4),
-        stat_tile("Integrated", if (res$method == "none") "No" else "Yes"),
-        stat_tile("Method", res$method),
-        stat_tile("Batch column", res$batch)
+        stat_tile(i18n("Integrated", "已整合"),
+                  if (res$method == "none") i18n("No", "否") else i18n("Yes", "是")),
+        stat_tile(i18n("Method", "方法"), res$method),
+        stat_tile(i18n("Batch column", "批次列"), res$batch)
       )
     })
 
@@ -111,7 +127,7 @@ mod_integrate_server <- function(id, rv, log_rv) {
         return(
           ggplot2::ggplot() +
             ggplot2::annotate("text", x = 0, y = 0,
-                              label = "No embedding yet.\nRun an embedding step to preview batch mixing.") +
+                              label = "No embedding yet. / 尚无嵌入。\nRun an embedding step to preview batch mixing. / 运行嵌入步骤以预览批次混合。") +
             ggplot2::theme_void()
         )
       }
@@ -125,7 +141,7 @@ mod_integrate_server <- function(id, rv, log_rv) {
         ggplot2::scale_colour_manual(values = scstudio_palette(nlevels(df$color)),
                                      name = batch) +
         ggplot2::labs(x = paste0(reduction, " 1"), y = paste0(reduction, " 2"),
-                      title = "Batch mixing after integration") +
+                      title = "Batch mixing after integration / 整合后的批次混合") +
         scstudio_theme()
     })
   })

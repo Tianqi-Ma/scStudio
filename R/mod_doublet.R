@@ -12,34 +12,51 @@ NULL
 mod_doublet_ui <- function(id) {
   ns <- shiny::NS(id)
   explainer <- explainer_card(
-    title = "Doublet removal (去双细胞)",
-    what = "Detect and remove <b>doublets</b>: droplets that accidentally captured
+    title = list(en = "Doublet removal (去双细胞)", zh = "去除双细胞"),
+    what = list(
+      en = "Detect and remove <b>doublets</b>: droplets that accidentally captured
             two cells instead of one.",
-    why  = "A doublet = one droplet captured two cells, masquerading as a fake
+      zh = "检测并去除<b>双细胞</b>：意外捕获了两个细胞而非一个的液滴。"),
+    why  = list(
+      en = "A doublet = one droplet captured two cells, masquerading as a fake
             'intermediate' cell type. Left in, they create spurious clusters and
             confuse downstream annotation; remove them.",
-    how  = "The recommended <b>scDblFinder</b> method scores every cell for how
+      zh = "双细胞 = 一个液滴捕获了两个细胞，伪装成虚假的“中间”细胞类型。若保留，
+            它们会产生假的细胞群并干扰下游注释，因此应予去除。"),
+    how  = list(
+      en = "The recommended <b>scDblFinder</b> method scores every cell for how
             doublet-like it is. Choose whether to just flag doublets (keep all
             cells but label them) or remove them (drop the flagged cells).",
-    example = "Two cells of different types share a droplet and look like a novel
-               'hybrid' population &mdash; scDblFinder flags them so you can drop them."
+      zh = "推荐的 <b>scDblFinder</b> 方法会为每个细胞打分，评估其像双细胞的程度。
+            可选择仅标记双细胞（保留所有细胞但加上标签）或去除它们（丢弃被标记的细胞）。"),
+    example = list(
+      en = "Two cells of different types share a droplet and look like a novel
+               'hybrid' population &mdash; scDblFinder flags them so you can drop them.",
+      zh = "两个不同类型的细胞共享一个液滴，看起来像一个新的“杂合”细胞群——
+               scDblFinder 会将它们标记出来，以便您丢弃。")
   )
   controls <- shiny::tagList(
     label_with_help("Detection method",
-                    "scDblFinder = fast one-click default (recommended). DoubletFinder = classic method needing a per-dataset pK sweep."),
+                    "scDblFinder = fast one-click default (recommended). DoubletFinder = classic method needing a per-dataset pK sweep.",
+                    label_zh = "检测方法",
+                    tip_zh = "scDblFinder = 快速的一键默认方法（推荐）。DoubletFinder = 经典方法，需针对每个数据集进行 pK 扫描。"),
     shiny::selectInput(ns("method"), NULL,
                        choices = c("scDblFinder" = "scDblFinder",
                                    "DoubletFinder" = "DoubletFinder"),
                        selected = "scDblFinder"),
     label_with_help("Action",
-                    "Flag = keep every cell but label it doublet/singlet. Remove = drop cells classed as doublets."),
+                    "Flag = keep every cell but label it doublet/singlet. Remove = drop cells classed as doublets.",
+                    label_zh = "操作",
+                    tip_zh = "标记 = 保留所有细胞，但标注为双细胞/单细胞。去除 = 丢弃被判为双细胞的细胞。"),
     shiny::radioButtons(ns("action"), NULL,
                         c("Flag only" = "flag", "Remove doublets" = "remove"),
                         selected = "remove", inline = TRUE),
     label_with_help("Custom score threshold (optional)",
-                    "Leave blank to use the method's own call. Set a value to class cells with doublet_score above it as doublets."),
+                    "Leave blank to use the method's own call. Set a value to class cells with doublet_score above it as doublets.",
+                    label_zh = "自定义评分阈值（可选）",
+                    tip_zh = "留空则使用方法自身的判定。设定数值后，doublet_score 高于该值的细胞将被判为双细胞。"),
     shiny::numericInput(ns("threshold"), NULL, value = NA, min = 0, max = 1, step = 0.05),
-    run_button(ns("run"), "Detect doublets")
+    run_button(ns("run"), "Detect doublets", "检测双细胞")
   )
   step_container(title = list(en = "Doublet removal", zh = "去除双细胞"),
                  explainer = explainer, controls = controls,
@@ -87,21 +104,24 @@ mod_doublet_server <- function(id, rv, log_rv) {
                  "obj <- run_doublets(obj)  # flag only"
                })
       shiny::showNotification(
-        sprintf("Doublet detection done: %d doublets (%s).",
-                res$n_doublet, if (action == "remove") "removed" else "flagged"),
+        i18n(sprintf("Doublet detection done: %d doublets (%s).",
+                     res$n_doublet, if (action == "remove") "removed" else "flagged"),
+             sprintf("双细胞检测完成：%d 个双细胞（%s）。",
+                     res$n_doublet, if (action == "remove") "已去除" else "已标记")),
         type = "message")
     })
 
     output$summary <- shiny::renderUI({
       if (is.na(res$before)) return(shiny::div(class = "scstudio-placeholder",
-                                               "Pick a method and click Detect doublets."))
+                                               i18n("Pick a method and click Detect doublets.",
+                                                    "选择一种方法后点击“检测双细胞”。")))
       pct <- if (res$before > 0) 100 * res$n_doublet / res$before else 0
       bslib::layout_columns(
         col_widths = c(4, 4, 4),
-        stat_tile("Cells in", format(res$before, big.mark = ",")),
-        stat_tile("Doublets", sprintf("%s (%.1f%%)",
+        stat_tile(i18n("Cells in", "输入细胞数"), format(res$before, big.mark = ",")),
+        stat_tile(i18n("Doublets", "双细胞"), sprintf("%s (%.1f%%)",
                                       format(res$n_doublet, big.mark = ","), pct)),
-        stat_tile(if (identical(res$action, "remove")) "Kept" else "Cells out",
+        stat_tile(if (identical(res$action, "remove")) i18n("Kept", "已保留") else i18n("Cells out", "输出细胞数"),
                   format(res$after, big.mark = ","))
       )
     })

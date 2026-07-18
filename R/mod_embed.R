@@ -13,39 +13,55 @@ NULL
 mod_embed_ui <- function(id) {
   ns <- shiny::NS(id)
   explainer <- explainer_card(
-    title = "Non-linear embedding (visualization)",
-    what = "Project cells into 2D so you can see clusters and structure.",
-    why  = "High-dimensional data is hard to inspect; a 2D map reveals groups,
+    title = list(en = "Non-linear embedding (visualization)",
+                 zh = "非线性降维（可视化）"),
+    what = list(
+      en = "Project cells into 2D so you can see clusters and structure.",
+      zh = "将细胞投影到二维，以便直观查看簇和结构。"),
+    why  = list(
+      en = "High-dimensional data is hard to inspect; a 2D map reveals groups,
             gradients, and rare populations at a glance.",
-    how  = "UMAP is the default. Fewer neighbors / smaller min-dist emphasize
+      zh = "高维数据难以直接查看；二维图能一眼揭示细胞群、连续梯度和稀有细胞群体。"),
+    how  = list(
+      en = "UMAP is the default. Fewer neighbors / smaller min-dist emphasize
             local structure; larger values emphasize global layout. Base the
             embedding on the same reduction you clustered on.",
-    example = "Distinct cell types appear as visually separated islands on the
+      zh = "默认使用 UMAP。更少的邻居数 / 更小的 min-dist 强调局部结构，更大的取值强调全局布局。降维应基于你聚类时所用的同一个线性降维结果。"),
+    example = list(
+      en = "Distinct cell types appear as visually separated islands on the
                UMAP.<br><b>Note:</b> PaCMAP requires a Python backend and may not
-               be available in every install."
+               be available in every install.",
+      zh = "不同的细胞类型会在 UMAP 上呈现为彼此分离的“岛屿”。<br><b>注意：</b>PaCMAP 需要 Python 后端，并非每个安装环境都可用。")
   )
   controls <- shiny::tagList(
     label_with_help("Method",
-                    "UMAP is the default. t-SNE emphasizes local structure. PaCMAP needs Python."),
+                    "UMAP is the default. t-SNE emphasizes local structure. PaCMAP needs Python.",
+                    "方法",
+                    "默认使用 UMAP。t-SNE 强调局部结构。PaCMAP 需要 Python。"),
     shiny::selectInput(ns("method"), NULL,
                        c("UMAP" = "umap", "t-SNE" = "tsne", "PaCMAP" = "pacmap")),
-    label_with_help("Reduction", "Which reduction to embed (PCA or Harmony)."),
+    label_with_help("Reduction", "Which reduction to embed (PCA or Harmony).",
+                    "线性降维", "用于嵌入的线性降维结果（PCA 或 Harmony）。"),
     shiny::uiOutput(ns("reduction_ui")),
-    label_with_help("Dimensions", "Number of leading dimensions to use."),
+    label_with_help("Dimensions", "Number of leading dimensions to use.",
+                    "维度数", "使用的前若干个维度的数量。"),
     shiny::numericInput(ns("dims"), NULL, value = 30, min = 2, max = 100),
     shiny::conditionalPanel(
       sprintf("input['%s'] == 'umap'", ns("method")),
-      label_with_help("n_neighbors", "Balances local vs global structure (UMAP)."),
+      label_with_help("n_neighbors", "Balances local vs global structure (UMAP).",
+                      "n_neighbors", "在局部结构与全局结构之间取得平衡（UMAP）。"),
       shiny::numericInput(ns("n_neighbors"), NULL, value = 30, min = 2, max = 200),
-      label_with_help("min_dist", "Minimum spacing between points (UMAP)."),
+      label_with_help("min_dist", "Minimum spacing between points (UMAP).",
+                      "min_dist", "点与点之间的最小间距（UMAP）。"),
       shiny::numericInput(ns("min_dist"), NULL, value = 0.3, min = 0, max = 1, step = 0.05)
     ),
     shiny::conditionalPanel(
       sprintf("input['%s'] == 'tsne'", ns("method")),
-      label_with_help("perplexity", "Effective number of neighbors (t-SNE)."),
+      label_with_help("perplexity", "Effective number of neighbors (t-SNE).",
+                      "perplexity", "有效邻居数（t-SNE）。"),
       shiny::numericInput(ns("perplexity"), NULL, value = 30, min = 5, max = 100)
     ),
-    run_button(ns("run"), "Run embedding")
+    run_button(ns("run"), "Run embedding", "运行降维")
   )
   step_container(title = list(en = "Embedding (UMAP / t-SNE)", zh = "降维可视化"),
                  explainer = explainer, controls = controls,
@@ -67,7 +83,8 @@ mod_embed_server <- function(id, rv, log_rv) {
       if (length(choices) == 0) choices <- reds
       if (length(choices) == 0) {
         return(shiny::div(class = "scstudio-placeholder",
-                          "No reductions yet — run PCA first."))
+                          i18n("No reductions yet — run PCA first.",
+                               "还没有降维结果 —— 请先运行 PCA。")))
       }
       selected <- if ("harmony" %in% choices) "harmony" else choices[1]
       shiny::selectInput(session$ns("reduction"), NULL,
@@ -116,13 +133,14 @@ mod_embed_server <- function(id, rv, log_rv) {
     output$summary <- shiny::renderUI({
       if (!isTRUE(res$done)) {
         return(shiny::div(class = "scstudio-placeholder",
-                          "Set parameters and click Run embedding."))
+                          i18n("Set parameters and click Run embedding.",
+                               "设置参数后点击“运行降维”。")))
       }
       bslib::layout_columns(
         col_widths = c(4, 4, 4),
-        stat_tile("Method", toupper(res$method)),
-        stat_tile("Reduction", res$reduction),
-        stat_tile("Parameters", res$params)
+        stat_tile(i18n("Method", "方法"), toupper(res$method)),
+        stat_tile(i18n("Reduction", "线性降维"), res$reduction),
+        stat_tile(i18n("Parameters", "参数"), res$params)
       )
     })
 

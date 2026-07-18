@@ -13,20 +13,30 @@ NULL
 mod_viz_ui <- function(id) {
   ns <- shiny::NS(id)
   explainer <- explainer_card(
-    title = "Visualize",
-    what = "Explore your data freely: colour the embedding by any metadata column,
+    title = list(en = "Visualize", zh = "可视化"),
+    what = list(
+      en = "Explore your data freely: colour the embedding by any metadata column,
             or show the expression of specific genes.",
-    why  = "A picture is the fastest way to sanity-check clustering, annotation and
+      zh = "自由探索数据：按任意元数据列为降维图着色，或展示特定基因的表达。"),
+    why  = list(
+      en = "A picture is the fastest way to sanity-check clustering, annotation and
             marker genes -- and to build the figures for your report.",
-    how  = "Pick a plot type. <b>UMAP by metadata</b> colours cells by a column.
+      zh = "作图是核查聚类、注释和标志基因是否合理的最快方式，也是为报告制作图表的手段。"),
+    how  = list(
+      en = "Pick a plot type. <b>UMAP by metadata</b> colours cells by a column.
             <b>Violin / Dot / Feature / Heatmap</b> show expression of the genes
             you type (comma separated). Nothing here changes your object.",
-    example = "Type <code>CD3D, MS4A1, LYZ</code> and choose 'Feature plot' to see
-               where T cells, B cells and monocytes sit on the UMAP."
+      zh = "选择一种图表类型。<b>按元数据着色的 UMAP</b> 会按某一列为细胞着色。<b>小提琴图 / 点图 / 特征图 / 热图</b>展示你输入的基因（以逗号分隔）的表达。此处的操作不会改动你的对象。"),
+    example = list(
+      en = "Type <code>CD3D, MS4A1, LYZ</code> and choose 'Feature plot' to see
+               where T cells, B cells and monocytes sit on the UMAP.",
+      zh = "输入 <code>CD3D, MS4A1, LYZ</code> 并选择“特征图”，即可查看 T 细胞、B 细胞和单核细胞在 UMAP 上的位置。")
   )
   controls <- shiny::tagList(
     label_with_help("Plot type",
-                    "UMAP colours cells by metadata; the others show gene expression."),
+                    "UMAP colours cells by metadata; the others show gene expression.",
+                    "图表类型",
+                    "UMAP 按元数据为细胞着色；其他类型展示基因表达。"),
     shiny::selectInput(ns("ptype"), NULL,
                        choices = c("UMAP by metadata" = "umap",
                                    "Violin plot"      = "violin",
@@ -35,17 +45,23 @@ mod_viz_ui <- function(id) {
                                    "Heatmap"          = "heatmap"),
                        selected = "umap"),
     label_with_help("Group by (metadata column)",
-                    "Which metadata column to colour or split cells by (e.g. seurat_clusters, celltype)."),
+                    "Which metadata column to colour or split cells by (e.g. seurat_clusters, celltype).",
+                    "分组依据（元数据列）",
+                    "用于为细胞着色或分组的元数据列（例如 seurat_clusters、celltype）。"),
     shiny::selectInput(ns("meta_col"), NULL, choices = NULL),
     shiny::conditionalPanel(
       sprintf("input['%s'] != 'umap'", ns("ptype")),
       label_with_help("Genes",
-                      "Comma-separated gene names for expression plots (violin/dot/feature/heatmap)."),
+                      "Comma-separated gene names for expression plots (violin/dot/feature/heatmap).",
+                      "基因",
+                      "用于表达图（violin/dot/feature/heatmap）的基因名，以逗号分隔。"),
       shiny::textInput(ns("genes"), NULL, placeholder = "e.g. CD3D, MS4A1, LYZ")
     ),
-    label_with_help("Download format", "File type for the downloaded figure."),
+    label_with_help("Download format", "File type for the downloaded figure.",
+                    "下载格式", "下载图片的文件类型。"),
     shiny::radioButtons(ns("fmt"), NULL, c("PNG" = "png", "PDF" = "pdf"), inline = TRUE),
-    shiny::downloadButton(ns("download"), "Download plot", class = "w-100")
+    shiny::downloadButton(ns("download"),
+                          i18n("Download plot", "下载图片"), class = "w-100")
   )
   step_container(
     title     = list(en = "Visualize", zh = "可视化"),
@@ -156,15 +172,16 @@ mod_viz_server <- function(id, rv, log_rv) {
       obj <- rv$obj
       if (is.null(obj)) {
         return(shiny::div(class = "scstudio-placeholder",
-                          "Load and process data first, then explore it here."))
+                          i18n("Load and process data first, then explore it here.",
+                               "请先加载并处理数据，然后在此探索。")))
       }
       dims <- obj_dims(obj)
       genes <- parse_genes(input$genes)
       bslib::layout_columns(
         col_widths = c(4, 4, 4),
-        stat_tile("Cells", format(dims$cells, big.mark = ",")),
-        stat_tile("Plot", input$ptype),
-        stat_tile("Genes requested", length(genes))
+        stat_tile(i18n("Cells", "细胞数"), format(dims$cells, big.mark = ",")),
+        stat_tile(i18n("Plot", "图表"), input$ptype),
+        stat_tile(i18n("Genes requested", "请求的基因数"), length(genes))
       )
     })
 

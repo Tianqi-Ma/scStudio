@@ -12,21 +12,34 @@ NULL
 mod_normalize_ui <- function(id) {
   ns <- shiny::NS(id)
   explainer <- explainer_card(
-    title = "Normalization",
-    what = "Adjust each cell's counts so that cells sequenced to different depths
+    title = list(en = "Normalization", zh = "归一化"),
+    what = list(
+      en = "Adjust each cell's counts so that cells sequenced to different depths
             become comparable.",
-    why  = "Raw counts depend on how deeply each cell was sequenced. Without
+      zh = "调整每个细胞的计数，使测序深度不同的细胞变得可比较。"),
+    why  = list(
+      en = "Raw counts depend on how deeply each cell was sequenced. Without
             normalization, deeper cells look artificially 'more expressing'; the
             comparisons downstream would reflect depth, not biology.",
-    how  = "<b>LogNormalize</b> scales each cell to a common total, then log
+      zh = "原始计数取决于每个细胞的测序深度。若不做归一化，测序更深的细胞会显得
+            '表达量更高'，下游比较反映的将是深度而非生物学差异。"),
+    how  = list(
+      en = "<b>LogNormalize</b> scales each cell to a common total, then log
             transforms (robust default). <b>SCT</b> models counts with a
             regularized negative binomial and often needs no extra scaling.",
-    example = "A cell with 20,000 UMIs and one with 5,000 UMIs are put on the same
-               scale so a shared marker reads similarly in both."
+      zh = "<b>LogNormalize</b> 将每个细胞缩放到统一的总量后再取对数（稳健的默认方法）。
+            <b>SCT</b> 用正则化负二项模型对计数建模，通常无需额外缩放。"),
+    example = list(
+      en = "A cell with 20,000 UMIs and one with 5,000 UMIs are put on the same
+               scale so a shared marker reads similarly in both.",
+      zh = "一个有 20,000 个 UMI 的细胞与一个有 5,000 个 UMI 的细胞被放到同一尺度，
+               使共有的标记基因在两者中读数相近。")
   )
   controls <- shiny::tagList(
     label_with_help("Method",
-                    "LogNormalize = classic log-scaled counts (recommended default). SCT = variance-stabilizing transform (SCTransform)."),
+                    "LogNormalize = classic log-scaled counts (recommended default). SCT = variance-stabilizing transform (SCTransform).",
+                    "方法",
+                    "LogNormalize = 经典的对数缩放计数（推荐默认）。SCT = 方差稳定变换（SCTransform）。"),
     shiny::selectInput(ns("method"), NULL,
                        choices = c("LogNormalize" = "LogNormalize",
                                    "SCT" = "SCT"),
@@ -34,10 +47,12 @@ mod_normalize_ui <- function(id) {
     shiny::conditionalPanel(
       sprintf("input['%s'] == 'LogNormalize'", ns("method")),
       label_with_help("Scale factor",
-                      "Common total each cell is scaled to before log. 10,000 is the standard default."),
+                      "Common total each cell is scaled to before log. 10,000 is the standard default.",
+                      "缩放因子",
+                      "取对数前每个细胞缩放到的统一总量。10,000 是标准默认值。"),
       shiny::numericInput(ns("scale_factor"), NULL, value = 1e4, min = 1, step = 1e3)
     ),
-    run_button(ns("run"), "Normalize")
+    run_button(ns("run"), "Normalize", "归一化")
   )
   step_container(title = list(en = "Normalization", zh = "归一化"),
                  explainer = explainer, controls = controls,
@@ -82,11 +97,12 @@ mod_normalize_server <- function(id, rv, log_rv) {
 
     output$summary <- shiny::renderUI({
       if (!isTRUE(res$done)) return(shiny::div(class = "scstudio-placeholder",
-                                               "Pick a method and click Normalize."))
+                                               i18n("Pick a method and click Normalize.",
+                                                    "选择一种方法并点击归一化。")))
       bslib::layout_columns(
         col_widths = c(6, 6),
-        stat_tile("Method", res$method),
-        stat_tile("Scale factor",
+        stat_tile(i18n("Method", "方法"), res$method),
+        stat_tile(i18n("Scale factor", "缩放因子"),
                   if (identical(res$method, "LogNormalize"))
                     format(res$scale_factor, big.mark = ",") else "n/a")
       )
@@ -106,7 +122,7 @@ mod_normalize_server <- function(id, rv, log_rv) {
       ggplot2::ggplot(df, ggplot2::aes(x = log_count, text = text)) +
         ggplot2::geom_histogram(bins = 50, fill = scstudio_palette(1), alpha = 0.85) +
         ggplot2::labs(x = "Library size (log10 UMIs)", y = "Cells",
-                      title = "Per-cell sequencing depth") +
+                      title = "Per-cell sequencing depth / 每个细胞的测序深度") +
         scstudio_theme()
     })
   })

@@ -13,36 +13,54 @@ NULL
 mod_markers_ui <- function(id) {
   ns <- shiny::NS(id)
   explainer <- explainer_card(
-    title = "Marker genes",
-    what = "Find the genes that are specifically up- (or down-) regulated in each
+    title = list(en = "Marker genes", zh = "标志基因"),
+    what = list(
+      en = "Find the genes that are specifically up- (or down-) regulated in each
             cluster compared with all other cells.",
-    why  = "Clusters are just groups of similar cells until you know what makes
+      zh = "找出与其他所有细胞相比，在每个簇中特异性上调（或下调）的基因。"),
+    why  = list(
+      en = "Clusters are just groups of similar cells until you know what makes
             them different. Marker genes are the evidence you use to call a
             cluster a cell type (e.g. <code>CD3D</code> for T cells).",
-    how  = "<b>Wilcoxon</b> is the fast, robust default. Raise the log fold-change
+      zh = "在你弄清各簇之间的区别之前，簇只是相似细胞的分组而已。标志基因是你把某个簇判定为某种细胞类型的依据（例如 <code>CD3D</code> 对应 T 细胞）。"),
+    how  = list(
+      en = "<b>Wilcoxon</b> is the fast, robust default. Raise the log fold-change
             or min.pct to keep only stronger, more specific markers. Keep
             <b>only positive</b> markers if you only care about what a cluster
             expresses <i>more</i> than others.",
-    example = "For a T-cell cluster you would expect markers like <code>CD3D</code>,
-               <code>CD3E</code> and <code>TRAC</code> at the top of the list."
+      zh = "<b>Wilcoxon</b> 是快速、稳健的默认差异检验。提高 log fold-change 或 min.pct 可只保留更强、更特异的标志基因。若只关心某个簇比其他簇<i>更高</i>表达的基因，可只保留<b>正向</b>标志基因。"),
+    example = list(
+      en = "For a T-cell cluster you would expect markers like <code>CD3D</code>,
+               <code>CD3E</code> and <code>TRAC</code> at the top of the list.",
+      zh = "对于一个 T 细胞簇，你会期望 <code>CD3D</code>、<code>CD3E</code> 和 <code>TRAC</code> 这类标志基因排在列表前列。")
   )
   controls <- shiny::tagList(
     label_with_help("Statistical test",
-                    "Wilcoxon = fast rank test (default). ROC = ranks genes by classification power. MAST = models dropout (needs the MAST package)."),
+                    "Wilcoxon = fast rank test (default). ROC = ranks genes by classification power. MAST = models dropout (needs the MAST package).",
+                    "差异检验方法",
+                    "Wilcoxon = 快速的秩检验（默认）。ROC = 按分类能力对基因排序。MAST = 对 dropout 建模（需要 MAST 包）。"),
     shiny::selectInput(ns("test"), NULL,
                        choices = c("Wilcoxon" = "wilcox", "ROC" = "roc", "MAST" = "MAST"),
                        selected = "wilcox"),
     label_with_help("Log fold-change threshold",
-                    "Minimum log2 fold-change to test a gene. Higher = fewer, stronger markers."),
+                    "Minimum log2 fold-change to test a gene. Higher = fewer, stronger markers.",
+                    "Log fold-change 阈值",
+                    "检验某个基因所需的最小 log2 fold-change。越高 = 标志基因越少、越强。"),
     shiny::numericInput(ns("logfc"), NULL, value = 0.25, min = 0, step = 0.05),
     label_with_help("Min fraction expressing (min.pct)",
-                    "A gene must be detected in at least this fraction of cells in one of the two groups."),
+                    "A gene must be detected in at least this fraction of cells in one of the two groups.",
+                    "最小表达比例（min.pct）",
+                    "某个基因必须在两组之一中至少这一比例的细胞里被检测到。"),
     shiny::numericInput(ns("min_pct"), NULL, value = 0.1, min = 0, max = 1, step = 0.05),
-    shiny::checkboxInput(ns("only_pos"), "Only positive markers", value = TRUE),
+    shiny::checkboxInput(ns("only_pos"),
+                         i18n("Only positive markers", "仅保留正向标志基因"),
+                         value = TRUE),
     label_with_help("Top N per cluster",
-                    "How many top markers per cluster to show in the preview chart."),
+                    "How many top markers per cluster to show in the preview chart.",
+                    "每簇 Top N",
+                    "在预览图中每个簇显示多少个排名靠前的标志基因。"),
     shiny::numericInput(ns("top_n"), NULL, value = 10, min = 1, max = 50, step = 1),
-    run_button(ns("run"), "Find markers")
+    run_button(ns("run"), "Find markers", "查找标志基因")
   )
   step_container(
     title     = list(en = "Marker genes", zh = "标志基因"),
@@ -88,15 +106,16 @@ mod_markers_server <- function(id, rv, log_rv) {
       df <- markers()
       if (is.null(df)) {
         return(shiny::div(class = "scstudio-placeholder",
-                          "Set options and click ", shiny::tags$b("Find markers"), "."))
+                          i18n("Set options and click <b>Find markers</b>.",
+                               "设置选项后点击<b>查找标志基因</b>。")))
       }
       n_clusters <- length(unique(df$cluster))
       genes <- if ("gene" %in% colnames(df)) length(unique(df$gene)) else NA_integer_
       bslib::layout_columns(
         col_widths = c(4, 4, 4),
-        stat_tile("Markers", format(nrow(df), big.mark = ",")),
-        stat_tile("Clusters", format(n_clusters, big.mark = ",")),
-        stat_tile("Unique genes", format(genes, big.mark = ","))
+        stat_tile(i18n("Markers", "标志基因数"), format(nrow(df), big.mark = ",")),
+        stat_tile(i18n("Clusters", "簇数"), format(n_clusters, big.mark = ",")),
+        stat_tile(i18n("Unique genes", "去重基因数"), format(genes, big.mark = ","))
       )
     })
 
