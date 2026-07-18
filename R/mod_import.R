@@ -55,7 +55,7 @@ mod_import_ui <- function(id) {
                       "The bundled example loads instantly offline. The 10x PBMC sets are real data and download the first time (needs internet).",
                       label_zh = "演示数据集",
                       tip_zh = "内置示例可离线即时加载。10x PBMC 数据集是真实数据，首次使用需下载（需要联网）。"),
-      shiny::selectInput(ns("demo_id"), NULL, choices = demo_choices, selected = "bundled"),
+      shiny::selectInput(ns("demo_id"), NULL, choices = demo_choices, selected = "pbmc3k"),
       shiny::helpText(shiny::textOutput(ns("demo_desc"), inline = TRUE)),
       run_button(ns("load_demo"), "Load demo data", "加载演示数据")
     ),

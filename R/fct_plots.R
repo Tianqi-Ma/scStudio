@@ -59,11 +59,16 @@ preview_plot_ui <- function(id, height = "100%") {
 #' @keywords internal
 render_scop_plot <- function(plot_expr) {
   shiny::renderPlot({
-    p <- tryCatch(plot_expr(), error = function(e) {
-      shiny::showNotification(paste("Plot error:", conditionMessage(e)),
-                              type = "error", duration = 10)
-      NULL
-    })
+    p <- tryCatch(
+      plot_expr(),
+      # req()/validate() raise a silent condition when data isn't ready yet;
+      # let it through quietly instead of showing an empty "Plot error:".
+      shiny.silent.error = function(e) NULL,
+      error = function(e) {
+        shiny::showNotification(paste("Plot error:", conditionMessage(e)),
+                                type = "error", duration = 10)
+        NULL
+      })
     shiny::req(p)
     if (methods::is(p, "Heatmap") || methods::is(p, "HeatmapList")) {
       if (has_pkg("ComplexHeatmap")) ComplexHeatmap::draw(p) else print(p)
