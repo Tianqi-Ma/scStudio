@@ -24,7 +24,7 @@ Every step is designed for beginners *and* experts:
 > [Caveats](#caveats).
 >
 > scStudio is also the single-cell half of
-> [OMICstudio](https://github.com/Tianqi-Ma/OMICstudio), a multi-omics suite
+> [OmicOne](https://github.com/Tianqi-Ma/OmicOne), a multi-omics suite
 > built from the same code; shared changes are mirrored between the two.
 
 ---

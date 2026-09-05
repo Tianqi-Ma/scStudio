@@ -1,7 +1,7 @@
 # Regression guard: the shell smoke test only proves the UI *builds*. It never
 # evaluates an output, so a render body calling a function that does not exist
 # passes every test and fails only in the browser (this is exactly how a stale
-# helper name reached main in the OMICstudio sibling repo).
+# helper name reached main in the OmicOne sibling repo).
 #
 # These tests close that hole two ways:
 #   1. build every step's UI;

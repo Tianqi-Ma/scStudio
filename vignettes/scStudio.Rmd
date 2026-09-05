@@ -18,7 +18,7 @@ analysis: 21 steps across seven phases. You launch it with one command; it opens
 in your browser and runs all computation on your own machine.
 
 The same code also powers the single-cell half of
-[OMICstudio](https://github.com/Tianqi-Ma/OMICstudio), a multi-omics suite.
+[OmicOne](https://github.com/Tianqi-Ma/OmicOne), a multi-omics suite.
 
 ## Launch it
 

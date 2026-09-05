@@ -50,7 +50,7 @@
   evaluate (with and without a working object), and every function is checked
   for calls to names that do not resolve. The survival layer has its own unit
   tests. This is the gap that let a stale helper name reach main in the
-  [OMICstudio](https://github.com/Tianqi-Ma/OMICstudio) sibling repo.
+  [OmicOne](https://github.com/Tianqi-Ma/OmicOne) sibling repo.
 
 ## Known limitations
 - **Not validated end-to-end** against a live Seurat/scop install with real

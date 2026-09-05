@@ -20,7 +20,7 @@
 > 输出求值、测试、安装）。但**尚未在装好 Seurat/scop 的环境里端到端实跑过**——
 > 见[注意事项](#注意事项)。
 >
-> scStudio 同时也是多组学套件 [OMICstudio](https://github.com/Tianqi-Ma/OMICstudio)
+> scStudio 同时也是多组学套件 [OmicOne](https://github.com/Tianqi-Ma/OmicOne)
 > 的单细胞部分，两者同源；共通改动会在两个仓库之间同步。
 
 ---

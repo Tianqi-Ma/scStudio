@@ -154,6 +154,12 @@ body { background: var(--sc-bg); color: var(--sc-text); }
   border-color: color-mix(in srgb, var(--sc-ok) 45%, transparent);
   background: color-mix(in srgb, var(--sc-ok) 12%, transparent);
 }
+/* the recorded-steps list on the Report and Export previews */
+.scstudio-steps { padding-left: 1.2rem; margin: 0; font-size: .88rem; line-height: 1.7; }
+.scstudio-steps li { padding: .1rem 0; }
+.scstudio-muted { color: var(--sc-muted); font-size: .82rem; }
+/* results table sitting under a preview plot */
+.scstudio-table { margin-top: .8rem; font-size: .85rem; }
 /* which step a "coming soon" card belongs to */
 .scstudio-placeholder-step {
   display: inline-block; margin-bottom: .6rem; padding: .15rem .5rem;
