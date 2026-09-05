@@ -136,6 +136,19 @@ body { background: var(--sc-bg); color: var(--sc-text); }
   padding: 2rem; text-align: center; color: var(--sc-muted);
   background: var(--sc-panel); border: 1px dashed var(--sc-border); border-radius: .5rem;
 }
+/* "nothing here yet" line in the sidebar (no data / no omics chosen) */
+.scstudio-status-empty {
+  padding: .55rem .1rem; font-size: .8rem; color: var(--sc-muted); font-style: italic;
+}
+/* compact wrapper for the sidebar's dataset readout */
+.scstudio-mini { font-size: .82rem; line-height: 1.35; }
+/* which step a "coming soon" card belongs to */
+.scstudio-placeholder-step {
+  display: inline-block; margin-bottom: .6rem; padding: .15rem .5rem;
+  font-size: .72rem; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--sc-accent2); border: 1px solid var(--sc-border);
+  border-radius: 1rem; background: var(--sc-card);
+}
 
 /* ---- startup splash ---- */
 #scstudio-splash {
@@ -156,3 +169,28 @@ body { background: var(--sc-bg); color: var(--sc-text); }
   background-clip: text; color: transparent;
 }
 #scstudio-splash-logo .s { color: var(--sc-muted); font-size: .9rem; margin-top: .25rem; }
+
+/* ---- omics landing page ---- */
+.scstudio-switch { color: var(--sc-muted); text-decoration: none; font-size: .85rem; margin-right: .3rem; }
+.scstudio-switch:hover { color: var(--sc-accent2); }
+.scstudio-landing { max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem; }
+.scstudio-landing-head { text-align: center; margin-bottom: 1.4rem; }
+.scstudio-omgrid {
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.scstudio-omcard {
+  position: relative; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--sc-border); border-radius: .8rem; background: var(--sc-card);
+  min-height: 190px; box-shadow: var(--sc-elev); transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.scstudio-omcard:hover {
+  transform: translateY(-3px); border-color: var(--sc-accent);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--sc-accent) 25%, transparent);
+}
+.scstudio-omcanvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .18; pointer-events: none; }
+.scstudio-omcard:hover .scstudio-omcanvas { opacity: .45; }
+.scstudio-omcard-body { position: relative; z-index: 1; padding: 1.1rem 1.2rem; }
+.scstudio-omicon { font-size: 1.6rem; color: var(--sc-accent2); margin-bottom: .5rem; }
+.scstudio-omtitle { font-weight: 700; font-size: 1.05rem; margin-bottom: .3rem; }
+.scstudio-omdesc { color: var(--sc-muted); font-size: .85rem; line-height: 1.4; }

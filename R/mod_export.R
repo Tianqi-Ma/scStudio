@@ -123,18 +123,20 @@ mod_export_server <- function(id, rv, log_rv) {
 
     output$download_obj <- shiny::downloadHandler(
       filename = function() {
-        ext <- switch(input$fmt, rds = "rds", h5ad = "h5ad", figures = "txt")
+        fmt <- input$fmt %||% "rds"
+        ext <- switch(fmt, rds = "rds", h5ad = "h5ad", figures = "txt")
         paste0("scstudio_object_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".", ext)
       },
       content = function(file) {
+        fmt <- input$fmt %||% "rds"
         obj <- rv$obj
         if (is.null(obj)) {
           writeLines("No object available to export.", file)
           return(invisible(NULL))
         }
-        if (input$fmt == "rds") {
+        if (fmt == "rds") {
           saveRDS(obj, file)
-        } else if (input$fmt == "h5ad") {
+        } else if (fmt == "h5ad") {
           if (!require_pkgs(c("SeuratDisk", "Seurat"), "AnnData (.h5ad) export")) {
             writeLines("SeuratDisk not installed; could not write .h5ad.", file)
             return(invisible(NULL))
@@ -148,6 +150,7 @@ mod_export_server <- function(id, rv, log_rv) {
             "Figures are downloaded individually from the Visualize step",
             "using its 'Download plot' button (PNG/PDF)."), file)
         }
+        mark_done(rv, "export")
       }
     )
 
@@ -156,6 +159,7 @@ mod_export_server <- function(id, rv, log_rv) {
         paste0("scstudio_analysis_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".R"),
       content = function(file) {
         writeLines(build_script(log_rv()), file)
+        mark_done(rv, "export")
       }
     )
   })

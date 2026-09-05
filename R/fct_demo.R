@@ -1,8 +1,9 @@
 #' Demo datasets for first-time users
 #'
 #' Three ways to get started:
-#' 1. **pbmc3k** — the classic 2,700-cell 10x PBMC dataset (via SeuratData);
-#'    the recommended demo for a full run-through.
+#' 1. **pbmc3k** — the classic 2,700-cell 10x PBMC dataset, bundled in the
+#'    package as a sparse .rds so it loads instantly and offline. The
+#'    recommended demo for a full run-through.
 #' 2. **pancreas_sub** — scop's bundled mouse pancreas dataset with lineage
 #'    structure and spliced/unspliced layers; use it for trajectory / RNA velocity.
 #' 3. **bundled** — a tiny synthetic matrix shipped in the package; loads instantly

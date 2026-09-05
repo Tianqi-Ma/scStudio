@@ -36,6 +36,26 @@ qc_add_metrics <- function(obj, species = c("human", "mouse")) {
   obj
 }
 
+#' Guess the species from gene-name casing
+#'
+#' Human symbols are upper case (`MT-CO1`, `RPS6`), mouse symbols are title case
+#' (`mt-Co1`, `Rps6`). Used so displays that have no species control (the import
+#' overview) do not silently report 0% mitochondrial reads on mouse data.
+#'
+#' @param obj A Seurat object (or anything with gene symbols as rownames).
+#' @return "human" or "mouse"; defaults to "human" when undecidable.
+#' @keywords internal
+guess_species <- function(obj) {
+  g <- tryCatch(rownames(obj), error = function(e) NULL)
+  if (!length(g)) return("human")
+  if (any(grepl("^mt-", g)) || any(grepl("^Rp[sl]", g))) return("mouse")
+  if (any(grepl("^MT-", g)) || any(grepl("^RP[SL]", g))) return("human")
+  # Fall back on overall casing: mouse symbols are mostly title case.
+  alpha <- g[grepl("^[A-Za-z]{2,}", g)]
+  if (length(alpha) && mean(grepl("^[A-Z][a-z]", alpha)) > 0.5) return("mouse")
+  "human"
+}
+
 #' Dissociation/stress gene set (van den Brink et al.), human or mouse
 #' @keywords internal
 dissociation_genes <- function(species = c("human", "mouse")) {

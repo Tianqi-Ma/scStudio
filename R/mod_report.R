@@ -23,7 +23,8 @@ NULL
   annotation    = list(en = "Annotation",        zh = "注释",       kw = c("annot")),
   trajectory    = list(en = "Trajectory",        zh = "拟时序",     kw = c("trajector", "pseudotime", "dynamic")),
   enrichment    = list(en = "Enrichment / GSEA", zh = "富集 / GSEA", kw = c("enrich", "gsea")),
-  malignancy    = list(en = "Malignant / CNV",   zh = "恶性 / CNV", kw = c("cnv", "malignant", "stemness"))
+  malignancy    = list(en = "Malignant / CNV",   zh = "恶性 / CNV", kw = c("cnv", "malignant", "stemness")),
+  survival      = list(en = "Clinical & survival", zh = "临床与生存", kw = c("clinical", "surviv"))
 )
 
 #' @rdname mod_report
@@ -225,6 +226,7 @@ mod_report_server <- function(id, rv, log_rv) {
         if (!rendered) {
           writeLines(build_html(title, entries), file)
         }
+        mark_done(rv, "report")
       }
     )
   })

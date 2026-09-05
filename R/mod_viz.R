@@ -99,8 +99,21 @@ mod_viz_server <- function(id, rv, log_rv) {
     }
 
     # Is this plot type worth making interactive (ggplotly)?
+    #
+    # Only a plain ggplot can go through ggplotly: a multi-gene FeaturePlot comes
+    # back as a patchwork, and the mascarade/scop dim plot is a composed object --
+    # ggplotly errors on both, so those stay static.
     is_interactive <- shiny::reactive({
-      has_pkg("plotly") && input$ptype %in% c("umap", "feature")
+      if (!has_pkg("plotly") || !isTRUE(input$ptype %in% c("umap", "feature"))) {
+        return(FALSE)
+      }
+      if (identical(input$ptype, "umap") && isTRUE(input$mask)) return(FALSE)
+      if (identical(input$ptype, "feature") && length(parse_genes(input$genes)) != 1) {
+        return(FALSE)
+      }
+      # Before anything is plotted (no data yet) fall back to the static output.
+      p <- tryCatch(current_plot(), error = function(e) NULL)
+      isTRUE(inherits(p, "ggplot") && !inherits(p, "patchwork"))
     })
 
     # Build the current plot as a ggplot object (or NULL on failure).
@@ -167,7 +180,9 @@ mod_viz_server <- function(id, rv, log_rv) {
       output$iplot <- plotly::renderPlotly({
         gg <- current_plot()
         shiny::req(gg)
-        plotly::ggplotly(gg, tooltip = "text") |>
+        # "all" (not "text"): these are Seurat/ggplot layers with no `text`
+        # aesthetic, so asking for "text" produced empty hover boxes.
+        plotly::ggplotly(gg, tooltip = "all") |>
           plotly::config(displayModeBar = FALSE)
       })
     }
@@ -203,6 +218,7 @@ mod_viz_server <- function(id, rv, log_rv) {
         shiny::req(gg)
         ggplot2::ggsave(file, plot = gg, width = 8, height = 6, dpi = 300,
                         device = input$fmt)
+        mark_done(rv, "viz")
       }
     )
   })

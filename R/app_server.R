@@ -1,7 +1,8 @@
 #' Top-level server: shared state, grouped stepper, navigation
 #'
 #' A single reactive hub (`rv`) holds the working object, a per-step status map
-#' (colours the left navigator), and the reproducibility log. Each module reads
+#' (colours the left navigator), the clinical/survival cohort, and the
+#' reproducibility log. Each module reads
 #' `rv$obj`, does its work, writes it back, and marks its step done. Language is
 #' handled entirely client-side (app.js); theme via bslib input_dark_mode.
 #'
@@ -9,7 +10,10 @@
 #' @keywords internal
 app_server <- function(input, output, session) {
 
-  rv <- shiny::reactiveValues(obj = NULL, source = NULL, status = list())
+  rv <- shiny::reactiveValues(
+    obj = NULL, source = NULL, status = list(),
+    clinical = NULL   # cohort loaded by the Clinical & survival step
+  )
   log_rv <- shiny::reactiveVal(list())
 
   # --- Shared "export current data" (available on every step) ----------------
@@ -80,6 +84,7 @@ app_server <- function(input, output, session) {
   mod_cellcycle_signatures_server("cellcycle", rv, log_rv)
   mod_cellcomm_server("cellcomm", rv, log_rv)
   mod_malignancy_server("malignancy", rv, log_rv)
+  mod_clinical_server("clinical", rv, log_rv)
   mod_viz_server("viz", rv, log_rv)
   mod_report_server("report", rv, log_rv)
   mod_export_server("export", rv, log_rv)

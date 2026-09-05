@@ -14,8 +14,11 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 ## What scStudio is
 
 scStudio is a local, browser-based app for interactive single-cell RNA-seq
-analysis. You launch it with one command; it opens in your browser and runs all
-computation on your own machine.
+analysis: 21 steps across seven phases. You launch it with one command; it opens
+in your browser and runs all computation on your own machine.
+
+The same code also powers the single-cell half of
+[OMICstudio](https://github.com/Tianqi-Ma/OMICstudio), a multi-omics suite.
 
 ## Launch it
 
@@ -29,9 +32,10 @@ server.
 ## Try it in 30 seconds (no data needed)
 
 1. On the **1. Import** step, keep the source set to **Demo data**.
-2. Leave the dataset as *Bundled tiny example* and click **Load demo data**.
-3. Walk left to right through the steps. Each step has a "What is this step?"
-   card, a method choice, adjustable thresholds, and an interactive preview.
+2. Leave the dataset as *PBMC 3k* — it is bundled in the package, so it loads
+   instantly and offline — and click **Load demo data**.
+3. Work down the left-hand navigator. Each step has a "What is this step?" card,
+   a method choice, adjustable thresholds, and a large preview.
 
 ## Use your own data
 
@@ -42,21 +46,52 @@ On **1. Import**, choose **Upload file** and pick:
 - a counts table (CSV/TSV; genes in rows, cells in columns).
 
 Old Seurat objects are updated automatically. You can also fetch a file from a
-URL.
+URL. Before doing anything else, the **Overview** tab surveys the raw data
+(per-cell QC violins, top expressed genes, counts vs genes) so you can see what
+you are about to filter.
 
 ## A typical run
 
 Import → QC (adaptive MAD thresholds) → Doublet removal (scDblFinder) →
 Normalize (LogNormalize) → Features + PCA → *(optional)* Integrate (Harmony) →
 Cluster (Leiden) → Embed (UMAP) → Markers → Annotate (manual / SingleR /
-Azimuth) → Visualize → Export.
+Azimuth) → Enrichment → Trajectory → Visualize → Report → Export.
 
-At **Export** you can download the processed object and an R script that
-reproduces every step you ran.
+The **⤓ Export** menu in the top bar works on every step, so you can pull out the
+object, metadata, counts or embeddings at any point. At **Export** you can also
+download an R script that reproduces every step you ran, and at **Report** a
+narrated HTML write-up of the same log.
+
+## Linking your analysis to outcome
+
+Step 18, **Clinical & survival**, takes a per-patient table (id, follow-up time,
+outcome) and asks whether a grouping separates survival:
+
+```{r}
+# clinical.csv
+# sample,os_months,os_status,stage
+# P01,14.2,Dead,III
+# P02,38.0,Alive,I
+```
+
+Stratify either by a column of that table, or by **cell composition** — the
+fraction of a chosen cluster or cell type in each sample, split high vs low. You
+get a Kaplan-Meier curve with the log-rank p-value, median survival per arm, and
+a univariable Cox screen over any covariates you select.
+
+Two things to know:
+
+- Sample ids in the clinical table must match the object's sample metadata
+  column for composition-based grouping; the app tells you how many matched.
+- The **optimal** cutpoint is chosen to maximise separation, so its p-value is
+  optimistic. Report the median split, or validate the cutpoint elsewhere.
+
+The cohort is stored on the shared hub, so other steps can reuse it.
 
 ## Installing the heavy dependencies
 
-The analysis engines (Seurat, scDblFinder, harmony, SingleR, ...) are optional
-at install time. If a step needs a package you don't have, the app tells you what
-to install. To get everything at once without managing dependencies, use the
+The analysis engines (scop, Seurat, scDblFinder, harmony, SingleR, ...) are
+optional at install time. If a step needs a package you don't have, the app tells
+you what to install. To get everything at once without managing dependencies —
+including scop and the conda environment for the Python-backed steps — use the
 Docker image (see the README).

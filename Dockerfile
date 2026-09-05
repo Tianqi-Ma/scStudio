@@ -20,7 +20,7 @@ LABEL org.opencontainers.image.title="scStudio" \
 RUN R -e "install.packages(c( \
       'shiny','bslib','ggplot2','Matrix','plotly','DT','shinyWidgets', \
       'promises','future','progressr','remotes','Seurat','SeuratObject', \
-      'harmony','clustree','ggrastr','scattermore'), \
+      'harmony','clustree','ggrastr','scattermore','survival','patchwork'), \
       repos='https://cloud.r-project.org')"
 
 RUN R -e "BiocManager::install(c( \

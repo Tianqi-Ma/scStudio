@@ -72,6 +72,13 @@ mod_qc_server <- function(id, rv, log_rv) {
   shiny::moduleServer(id, function(input, output, session) {
     res <- shiny::reactiveValues(before = NA, after = NA, keep = NULL, md = NULL)
 
+    # Pre-select the species from gene-name casing when data arrives, so mouse
+    # datasets do not silently get human mito/ribo patterns (and 0% readings).
+    shiny::observeEvent(rv$obj, {
+      shiny::req(rv$obj)
+      shiny::updateSelectInput(session, "species", selected = guess_species(rv$obj))
+    }, ignoreNULL = TRUE)
+
     shiny::observeEvent(input$run, {
       shiny::req(rv$obj)
       if (!require_pkgs("Seurat", "QC")) return(NULL)

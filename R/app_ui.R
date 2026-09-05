@@ -8,11 +8,19 @@
 #' @return A [bslib::page_sidebar()] UI wrapped with the splash overlay.
 #' @keywords internal
 app_ui <- function() {
+  # Inter from Google Fonts, but this app is meant to work offline: if the font
+  # cannot be resolved, fall back to the system UI stack instead of failing.
+  ui_font <- tryCatch(
+    bslib::font_google("Inter", local = FALSE),
+    error = function(e) bslib::font_collection(
+      "Inter", "system-ui", "-apple-system", "Segoe UI", "Roboto",
+      "Helvetica Neue", "Arial", "sans-serif"))
+
   theme <- bslib::bs_theme(
     version = 5, preset = "shiny",
     primary = "#2f81c7",
-    base_font = bslib::font_google("Inter", local = FALSE),
-    heading_font = bslib::font_google("Inter", local = FALSE)
+    base_font = ui_font,
+    heading_font = ui_font
   )
 
   panels <- lapply(app_steps(), function(s) {
@@ -101,9 +109,10 @@ app_steps <- function() {
     list(v = "cellcycle", n = 15, phase = "advanced", en = "Cell cycle & signatures", zh = "周期与信号", ui = mod_cellcycle_signatures_ui),
     list(v = "cellcomm",  n = 16, phase = "advanced", en = "Cell communication", zh = "细胞通讯", ui = mod_cellcomm_ui),
     list(v = "malignancy",n = 17, phase = "advanced", en = "Malignant / CNV", zh = "恶性/CNV", ui = mod_malignancy_ui),
-    list(v = "viz",       n = 18, phase = "output",   en = "Visualize",     zh = "可视化", ui = mod_viz_ui),
-    list(v = "report",    n = 19, phase = "output",   en = "Report",        zh = "报告",       ui = mod_report_ui),
-    list(v = "export",    n = 20, phase = "output",   en = "Export",        zh = "导出",       ui = mod_export_ui)
+    list(v = "clinical",  n = 18, phase = "advanced", en = "Clinical & survival", zh = "临床与生存", ui = mod_clinical_ui),
+    list(v = "viz",       n = 19, phase = "output",   en = "Visualize",     zh = "可视化", ui = mod_viz_ui),
+    list(v = "report",    n = 20, phase = "output",   en = "Report",        zh = "报告",       ui = mod_report_ui),
+    list(v = "export",    n = 21, phase = "output",   en = "Export",        zh = "导出",       ui = mod_export_ui)
   )
 }
 
