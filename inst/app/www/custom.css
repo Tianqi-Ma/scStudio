@@ -142,6 +142,18 @@ body { background: var(--sc-bg); color: var(--sc-text); }
 }
 /* compact wrapper for the sidebar's dataset readout */
 .scstudio-mini { font-size: .82rem; line-height: 1.35; }
+/* availability badge on the landing-page omics cards */
+.scstudio-ombadge {
+  display: inline-block; margin-top: .6rem; padding: .1rem .5rem;
+  font-size: .68rem; letter-spacing: .05em; text-transform: uppercase;
+  border-radius: 1rem; color: var(--sc-muted);
+  border: 1px solid var(--sc-border); background: var(--sc-panel);
+}
+.scstudio-ombadge.ready {
+  color: var(--sc-ok);
+  border-color: color-mix(in srgb, var(--sc-ok) 45%, transparent);
+  background: color-mix(in srgb, var(--sc-ok) 12%, transparent);
+}
 /* which step a "coming soon" card belongs to */
 .scstudio-placeholder-step {
   display: inline-block; margin-bottom: .6rem; padding: .15rem .5rem;

@@ -91,6 +91,32 @@ render_preview_plot <- function(gg_expr, tooltip = "text") {
   render_scop_plot(gg_expr)
 }
 
+#' Render a base-graphics plot (maftools) to a Shiny plot output
+#'
+#' maftools draws with base graphics and returns nothing useful, so its calls
+#' cannot go through [render_scop_plot()], which prints an object. `plot_expr` is
+#' a function that draws as a side effect; failures become a readable message on
+#' the canvas instead of a blank panel.
+#'
+#' @param plot_expr Function that draws a plot as a side effect.
+#' @param bg Panel background, matched to the app's dark theme.
+#' @keywords internal
+render_base_plot <- function(plot_expr, bg = "white") {
+  shiny::renderPlot({
+    op <- graphics::par(bg = bg)
+    on.exit(graphics::par(op), add = TRUE)
+    ok <- tryCatch({ plot_expr(); TRUE },
+                   shiny.silent.error = function(e) NA,
+                   error = function(e) conditionMessage(e))
+    if (isTRUE(ok)) return(invisible())
+    if (is.na(ok)) { shiny::req(FALSE) }        # nothing to draw yet: stay blank
+    shiny::showNotification(paste("Plot error:", ok), type = "error", duration = 12)
+    p2 <- graphics::par(mar = c(0, 0, 0, 0)); on.exit(graphics::par(p2), add = TRUE)
+    graphics::plot.new()
+    graphics::text(0.5, 0.5, paste0("Plot error:\n", ok), col = "#c1476b", cex = 1.1)
+  })
+}
+
 # ---- scop plotting wrappers -------------------------------------------------
 
 #' Dimensional-reduction scatter (clusters / metadata), scop::CellDimPlot,
