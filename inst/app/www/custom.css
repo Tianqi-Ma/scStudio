@@ -52,13 +52,24 @@ body { background: var(--sc-bg); color: var(--sc-text); }
 .scstudio-pydot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sc-muted); }
 .scstudio-pydot.ready::before { background: var(--sc-ok); }
 
-/* ---- left grouped stepper ---- */
+/* ---- left grouped stepper (collapsible phase groups) ---- */
 .scstudio-nav { display: flex; flex-direction: column; gap: 1px; padding-right: 2px; }
-.scstudio-phase {
+.scstudio-phasegroup > summary.scstudio-phase {
+  list-style: none; cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: .4rem;
   font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--sc-muted); margin: .8rem .2rem .25rem;
+  color: var(--sc-muted); margin: .7rem .2rem .25rem;
 }
-.scstudio-phase:first-child { margin-top: .2rem; }
+.scstudio-phasegroup > summary.scstudio-phase::-webkit-details-marker { display: none; }
+.scstudio-phasegroup > summary.scstudio-phase::before {
+  content: ""; width: 0; height: 0; flex: 0 0 auto;
+  border-left: 5px solid var(--sc-muted);
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  transition: transform .12s ease;
+}
+.scstudio-phasegroup[open] > summary.scstudio-phase::before { transform: rotate(90deg); }
+.scstudio-phasegroup:first-child > summary.scstudio-phase { margin-top: .2rem; }
+.scstudio-phase-count { margin-left: auto; letter-spacing: 0; text-transform: none; font-weight: 600; }
 .scstudio-navitem {
   display: flex; align-items: center; gap: .5rem; position: relative;
   padding: .32rem .5rem .32rem .3rem; border-radius: .45rem; cursor: pointer;
@@ -70,8 +81,8 @@ body { background: var(--sc-bg); color: var(--sc-text); }
   width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto;
   background: transparent; border: 2px solid var(--sc-border);
 }
-.scstudio-navitem.done  .scstudio-navdot { background: var(--sc-accent); border-color: var(--sc-accent); }
-.scstudio-navitem.done  { color: var(--sc-accent2); }
+.scstudio-navitem.done  .scstudio-navdot { background: var(--sc-ok); border-color: var(--sc-ok); }
+.scstudio-navitem.done  { color: var(--sc-muted); }
 .scstudio-navitem.current {
   background: color-mix(in srgb, var(--sc-accent) 18%, transparent);
   border-color: color-mix(in srgb, var(--sc-accent) 45%, transparent); font-weight: 600;
@@ -89,20 +100,36 @@ body { background: var(--sc-bg); color: var(--sc-text); }
 .scstudio-summarystrip { display: inline-flex; gap: .4rem; flex-wrap: wrap; }
 .scstudio-pill {
   display: inline-flex; align-items: baseline; gap: .35rem;
-  padding: .18rem .6rem; border-radius: 999px;
-  background: color-mix(in srgb, var(--sc-accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--sc-accent) 30%, transparent); font-size: .8rem;
+  padding: .12rem .55rem; border-radius: 999px;
+  background: var(--sc-panel); border: 1px solid var(--sc-border); font-size: .76rem;
 }
 .scstudio-pill-label { color: var(--sc-muted); }
-.scstudio-pill-value { font-weight: 700; }
+.scstudio-pill-value { font-weight: 600; color: var(--sc-accent2); }
 
 /* ---- plot-first main area ---- */
 .scstudio-step { height: 100%; background: var(--sc-card); border: 1px solid var(--sc-border); box-shadow: var(--sc-elev); }
 .scstudio-plotwrap { min-height: 64vh; height: 100%; display: flex; flex-direction: column; }
 .scstudio-plotwrap > * { flex: 1 1 auto; min-height: 0; }
+/* flatten the tab card inside the plot area: no card-in-card borders */
+.scstudio-plotwrap > .card { border: 0; box-shadow: none; background: transparent; }
+.scstudio-plotwrap > .card > .card-header {
+  background: transparent; border-bottom: 1px solid var(--sc-border); padding: .25rem .25rem 0;
+}
+.scstudio-plotwrap > .card > .card-body { padding: .6rem .25rem .25rem; }
 
-/* ---- explainer ---- */
-.scstudio-explainer .accordion-button { font-weight: 600; color: var(--sc-accent2); }
+/* ---- explainer (full-width strip above the workspace) ---- */
+.scstudio-explainer { border-bottom: 1px solid var(--sc-border); }
+.scstudio-explainer .accordion-item { border: 0; background: transparent; color: var(--sc-text); }
+.scstudio-explainer .accordion-button {
+  padding: .45rem 1rem; font-size: .85rem; font-weight: 600;
+  background: transparent; box-shadow: none; color: var(--sc-accent2);
+}
+.scstudio-explainer .accordion-button:not(.collapsed) {
+  background: color-mix(in srgb, var(--sc-accent) 8%, transparent);
+}
+.scstudio-explainer .accordion-body {
+  padding: .1rem 1.4rem .9rem; font-size: .88rem; line-height: 1.55; max-width: 74rem;
+}
 .scstudio-example {
   margin-top: .5rem; padding: .55rem .7rem;
   background: color-mix(in srgb, var(--sc-accent) 9%, transparent);
@@ -112,6 +139,10 @@ body { background: var(--sc-bg); color: var(--sc-text); }
 
 /* ---- controls ---- */
 .scstudio-label { font-weight: 600; margin: .55rem 0 .2rem; display: block; }
+.scstudio-rail .form-group { margin-bottom: .35rem; }
+.scstudio-rail .scstudio-label { margin: .65rem 0 .2rem; }
+.scstudio-rail > *:first-child, .scstudio-rail > *:first-child .scstudio-label { margin-top: 0; }
+.scstudio-rail hr { margin: .7rem 0; opacity: .4; }
 .scstudio-help {
   display: inline-flex; align-items: center; justify-content: center;
   width: 1.05rem; height: 1.05rem; margin-left: .35rem;
@@ -212,15 +243,13 @@ body { background: var(--sc-bg); color: var(--sc-text); }
 .scstudio-omicon { font-size: 1.6rem; color: var(--sc-accent2); margin-bottom: .5rem; }
 .scstudio-omtitle { font-weight: 700; font-size: 1.05rem; margin-bottom: .3rem; }
 .scstudio-omdesc { color: var(--sc-muted); font-size: .85rem; line-height: 1.4; }
-.scstudio-omicon { font-size: 1.6rem; color: var(--sc-accent2); margin-bottom: .5rem; }
-.scstudio-omtitle { font-weight: 700; font-size: 1.05rem; margin-bottom: .3rem; }
-.scstudio-omdesc { color: var(--sc-muted); font-size: .85rem; line-height: 1.4; }
 
 /* ---- figure export row ---- */
 .scstudio-fig-dl {
   display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
-  margin-top: .35rem; padding-top: .35rem; border-top: 1px dashed var(--sc-border);
+  margin-top: .3rem; opacity: .55; transition: opacity .15s ease;
 }
+.scstudio-fig-dl:hover, .scstudio-fig-dl:focus-within { opacity: 1; }
 .scstudio-fig-dl .form-group { margin: 0; }
 .scstudio-fig-dl .shiny-input-container { width: auto; }
 .scstudio-fig-dl .btn { line-height: 1.2; white-space: nowrap; }

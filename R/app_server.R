@@ -19,7 +19,7 @@ app_server <- function(input, output, session) {
   # --- Shared "export current data" (available on every step) ----------------
   register_exports(input, output, session, rv)
 
-  # --- Grouped, status-coloured left navigator -------------------------------
+  # --- Grouped, status-coloured left navigator (collapsible phase groups) ----
   output$step_nav <- shiny::renderUI({
     current <- input$steps %||% "import"
     status  <- rv$status
@@ -30,19 +30,32 @@ app_server <- function(input, output, session) {
     children <- list()
     for (ph in phase_order) {
       lab <- phases[[ph]]
-      children[[length(children) + 1]] <-
-        shiny::div(class = "scstudio-phase", i18n(lab$en, lab$zh))
-      for (s in Filter(function(x) identical(x$phase, ph), steps)) {
+      ph_steps <- Filter(function(x) identical(x$phase, ph), steps)
+      items <- lapply(ph_steps, function(s) {
         state <- if (identical(s$v, current)) "current"
                  else if (isTRUE(status[[s$v]])) "done" else "todo"
-        children[[length(children) + 1]] <- shiny::tags$a(
+        shiny::tags$a(
           class = paste("scstudio-navitem", state),
           onclick = sprintf("Shiny.setInputValue('goto','%s',{priority:'event'})", s$v),
           shiny::span(class = "scstudio-navdot"),
           shiny::span(class = "scstudio-navnum", s$n),
           shiny::span(class = "scstudio-navlabel", i18n(s$en, s$zh))
         )
-      }
+      })
+      n_done <- sum(vapply(ph_steps, function(s) isTRUE(status[[s$v]]), logical(1)))
+      has_current <- any(vapply(ph_steps, function(s) identical(s$v, current),
+                                logical(1)))
+      children[[length(children) + 1]] <- shiny::tags$details(
+        class = "scstudio-phasegroup",
+        open = if (has_current || !length(children)) NA else NULL,
+        shiny::tags$summary(
+          class = "scstudio-phase",
+          i18n(lab$en, lab$zh),
+          shiny::span(class = "scstudio-phase-count",
+                      sprintf("%d/%d", n_done, length(ph_steps)))
+        ),
+        items
+      )
     }
     shiny::div(class = "scstudio-nav", children)
   })
