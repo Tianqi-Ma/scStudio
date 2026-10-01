@@ -94,9 +94,10 @@ body { background: var(--sc-bg); color: var(--sc-text); }
 .scstudio-navlabel { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---- step header ---- */
+.scstudio-headwrap { width: 100%; }
 .scstudio-stephead { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .scstudio-steptitle { font-weight: 700; font-size: 1.06rem; }
-.scstudio-subtitle { color: var(--sc-muted); font-size: .82rem; }
+.scstudio-subtitle { color: var(--sc-muted); font-size: .82rem; margin-top: .1rem; }
 .scstudio-summarystrip { display: inline-flex; gap: .4rem; flex-wrap: wrap; }
 .scstudio-pill {
   display: inline-flex; align-items: baseline; gap: .35rem;
@@ -243,6 +244,21 @@ body { background: var(--sc-bg); color: var(--sc-text); }
 .scstudio-omicon { font-size: 1.6rem; color: var(--sc-accent2); margin-bottom: .5rem; }
 .scstudio-omtitle { font-weight: 700; font-size: 1.05rem; margin-bottom: .3rem; }
 .scstudio-omdesc { color: var(--sc-muted); font-size: .85rem; line-height: 1.4; }
+
+/* ---- pre-run preview guide (fills the empty canvas until the plot renders) ---- */
+.scstudio-preview-guide {
+  flex: 1 1 auto; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: .45rem; text-align: center;
+  color: var(--sc-muted); padding: 2rem; min-height: 220px;
+}
+.scstudio-preview-guide-icon { font-size: 1.6rem; opacity: .6; }
+.scstudio-preview-guide-text { max-width: 34rem; font-size: .88rem; line-height: 1.55; }
+.scstudio-preview-guide-hint { font-size: .78rem; opacity: .8; }
+/* once the plot output has real content, the guide steps aside */
+.scstudio-preview-guide:has(+ .shiny-plot-output:not(:empty)) { display: none; }
+/* an empty plot output shouldn't claim flex space next to the guide */
+.scstudio-plotwrap > .shiny-plot-output:empty { flex: 0 0 auto; }
+.scstudio-plotwrap > .scstudio-fig-dl { flex: 0 0 auto; }
 
 /* ---- figure export row ---- */
 .scstudio-fig-dl {
