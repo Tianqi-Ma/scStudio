@@ -212,3 +212,19 @@ body { background: var(--sc-bg); color: var(--sc-text); }
 .scstudio-omicon { font-size: 1.6rem; color: var(--sc-accent2); margin-bottom: .5rem; }
 .scstudio-omtitle { font-weight: 700; font-size: 1.05rem; margin-bottom: .3rem; }
 .scstudio-omdesc { color: var(--sc-muted); font-size: .85rem; line-height: 1.4; }
+.scstudio-omicon { font-size: 1.6rem; color: var(--sc-accent2); margin-bottom: .5rem; }
+.scstudio-omtitle { font-weight: 700; font-size: 1.05rem; margin-bottom: .3rem; }
+.scstudio-omdesc { color: var(--sc-muted); font-size: .85rem; line-height: 1.4; }
+
+/* ---- figure export row ---- */
+.scstudio-fig-dl {
+  display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
+  margin-top: .35rem; padding-top: .35rem; border-top: 1px dashed var(--sc-border);
+}
+.scstudio-fig-dl .form-group { margin-bottom: 0; }
+.scstudio-fig-dl .shiny-input-container { width: auto; }
+.scstudio-fig-dl label {
+  font-size: .72rem; color: var(--sc-muted); margin-bottom: .1rem; font-weight: 500;
+}
+.scstudio-fig-dl .btn { line-height: 1.2; white-space: nowrap; }
+.scstudio-fig-dl .form-control { padding: .2rem .4rem; font-size: .82rem; height: auto; }
