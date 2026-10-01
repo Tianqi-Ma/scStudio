@@ -35,6 +35,7 @@ app_ui <- function() {
       shiny::span(class = "scstudio-brand",
                   shiny::strong("scStudio"),
                   shiny::span(class = "scstudio-sub", "single-cell, locally")),
+      shiny::uiOutput("progress_chip", inline = TRUE),
       shiny::div(
         class = "scstudio-topright",
         bslib::popover(
@@ -69,7 +70,8 @@ app_ui <- function() {
       shiny::tags$link(rel = "stylesheet", type = "text/css", href = "scstudio/custom.css"),
       shiny::tags$script(src = "scstudio/app.js")
     ),
-    main
+    main,
+    shiny::uiOutput("next_hint")
   )
 
   # Splash overlay (position:fixed) + the app page.

@@ -62,6 +62,40 @@ app_server <- function(input, output, session) {
 
   shiny::observeEvent(input$goto, { bslib::nav_select("steps", input$goto) })
 
+  # --- Progress chip (topbar): done/total ------------------------------------
+  output$progress_chip <- shiny::renderUI({
+    steps <- app_steps()
+    n <- length(steps)
+    done <- sum(vapply(steps, function(s) isTRUE(rv$status[[s$v]]), logical(1)))
+    shiny::div(class = "scstudio-progress",
+               title = i18n("Steps completed", "已完成步骤"),
+               shiny::span(class = "scstudio-progress-num",
+                           sprintf("%d/%d", done, n)),
+               shiny::div(class = "scstudio-progress-bar",
+                          shiny::div(class = "scstudio-progress-fill",
+                                     style = sprintf("width:%.0f%%", 100 * done / n))))
+  })
+
+  # --- Floating "next step" chip once the current step is done ---------------
+  output$next_hint <- shiny::renderUI({
+    cur <- input$steps
+    if (is.null(cur) || !isTRUE(rv$status[[cur]])) return(NULL)
+    steps <- app_steps()
+    is_done <- vapply(steps, function(s) isTRUE(rv$status[[s$v]]), logical(1))
+    if (all(is_done)) return(NULL)
+    i <- match(cur, vapply(steps, function(s) s$v, character(1)))
+    undone <- which(!is_done)
+    nxt <- undone[undone > i][1]
+    if (is.na(nxt)) nxt <- undone[1]
+    s <- steps[[nxt]]
+    shiny::tags$a(
+      class = "scstudio-nextchip",
+      onclick = sprintf("Shiny.setInputValue('goto','%s',{priority:'event'})", s$v),
+      shiny::span(class = "scstudio-next-label", i18n("Next step", "下一步")),
+      shiny::strong(i18n(s$en, s$zh)), "→"
+    )
+  })
+
   # --- Global dataset status (bottom of sidebar) -----------------------------
   output$global_status <- shiny::renderUI({
     obj <- rv$obj
