@@ -101,7 +101,7 @@ mod_report_ui <- function(id) {
     shiny::downloadButton(ns("download_report"),
                           i18n("Download report", "下载报告"), class = "w-100")
   )
-  step_container(
+  step_container(id = id,
     title     = list(en = "Export report", zh = "导出报告"),
     explainer = explainer,
     controls  = controls,

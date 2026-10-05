@@ -75,28 +75,21 @@ app_server <- function(input, output, session) {
     keys <- vapply(steps, function(s) s$v, character(1))
     is_done <- vapply(keys, function(k) step_state(rv, k) == "done", logical(1))
     done <- sum(is_done)
-    nxt <- NULL
-    cur <- input$steps
-    if (!is.null(cur) && isTRUE(is_done[cur]) && !all(is_done)) {
-      i <- match(cur, keys)
-      undone <- which(!is_done)
-      j <- undone[undone > i][1]
-      if (is.na(j)) j <- undone[1]
-      s <- steps[[j]]
-      nxt <- shiny::tags$a(
-        class = "scstudio-nextlink",
-        onclick = sprintf("Shiny.setInputValue('goto','%s',{priority:'event'})", s$v),
-        shiny::span(class = "scstudio-next-label", i18n("Next:", "下一步：")),
-        shiny::strong(i18n(s$en, s$zh)), " \u2192")
-    }
     shiny::div(class = "scstudio-progress",
                title = i18n("Steps completed", "已完成步骤"),
                shiny::span(class = "scstudio-progress-num",
                            sprintf("%d/%d", done, n)),
                shiny::div(class = "scstudio-progress-bar",
                           shiny::div(class = "scstudio-progress-fill",
-                                     style = sprintf("width:%.0f%%", 100 * done / n))),
-               nxt)
+                                     style = sprintf("width:%.0f%%", 100 * done / n))))
+  })
+
+  # --- Bottom bar of every step: previous / next ------------------------------
+  for (s in app_steps()) local({
+    key <- s$v
+    output[[paste0("stepnav_", key)]] <- shiny::renderUI({
+      step_nav_bar(app_steps(), key, function(k) step_state(rv, k))
+    })
   })
 
   # --- Banner above the workspace when the current step is stale ------------

@@ -1,5 +1,25 @@
 # scStudio 0.3.1 (unreleased) — audit 2026-10
 
+## Figures, colours and navigation (feature/plot-style)
+
+- **One figure style.** Every figure is ggplot2 in one theme; Seurat's DimPlot /
+  FeaturePlot / VlnPlot / DotPlot / DoHeatmap are replaced by `sc_dim_plot()`,
+  `sc_feature_plot()`, `sc_violin_plot()`, `sc_dot_plot()` and `sc_heatmap()`
+  (cell maps with corner axes and in-place labels; expression scaled per gene;
+  dot and heatmap on a diverging z-score scale).
+- **A level keeps its colour.** A colour registry (`group_colors()`, stored in
+  `obj@misc`) gives every cluster, cell type, sample and condition the same
+  colour in every step; cell types inherit their cluster's colour; fixed
+  meanings (kept / removed, mutant / WT, low / high, cell-cycle phase) keep
+  fixed colours.
+- `compose_grid()` lays out multi-panel figures with aligned panels, so the KM
+  risk table, the PCA / HVG pair and the annotation map + bar now draw on every
+  installation (they needed patchwork >= 1.2 before).
+- **Step navigation moved to the bottom of each step**: previous on the left,
+  next on the right (highlighted once the step has run). The top bar keeps
+  the progress chip only.
+- **Animations fill the empty result area** instead of a 620 px strip.
+
 ## New analysis steps (feature/analysis-modules)
 
 - **Pseudobulk DE** (new phase *Compare conditions*): counts of each cell type
