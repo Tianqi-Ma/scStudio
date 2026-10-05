@@ -14,7 +14,8 @@
 - 🎚️ **可调阈值**，并给出合理默认值
 - 📊 **结果总结** + 大幅**预览图**
 - 🧾 **可复现日志**，可导出成 R 脚本或叙述式报告
-- 🌗 深色 / 浅色主题，English / 中文 —— 顶栏一键切换
+- 🎞️ 每一步的空白预览区都有一段**示意动画**，演示这一步在做什么
+- 🌗 浅色 / 深色主题（跟随系统），English / 中文 —— 顶栏一键切换
 
 > **当前状态（v0.3.0）：** 7 个阶段共 21 个步骤，全部接线并通过静态校验（解析、UI 构建、
 > 输出求值、测试、安装）。但**尚未在装好 Seurat/scop 的环境里端到端实跑过**——
@@ -98,11 +99,11 @@ Docker Desktop 里调高内存上限）。
 | | 3 | 去双细胞 | **scDblFinder** / DoubletFinder |
 | **预处理** | 4 | 归一化 | **LogNormalize** / SCTransform |
 | | 5 | 特征选择 / PCA | HVG **vst** / mvp / dispersion |
-| | 6 | 批次整合 | **无** / Harmony / CCA / RPCA / scVI / scanorama / BBKNN |
+| | 6 | 批次整合 | **无** / Harmony / CCA / RPCA（Seurat v5），附批次混合度评分 |
 | **结构** | 7 | 聚类 | **Leiden** / Louvain |
-| | 8 | 降维图 | **UMAP** / t-SNE / PaCMAP / PHATE |
+| | 8 | 降维图 | **UMAP** / t-SNE |
 | **身份** | 9 | 标志基因 | **wilcox** / roc / MAST |
-| | 10 | 注释 | **手动** / SingleR / Azimuth / scop KNN 预测 |
+| | 10 | 注释 | **手动** / SingleR（按簇，pruned 标签）/ Azimuth |
 | | 11 | 富集 / GSEA | ORA + GSEA（经 scop 调用 clusterProfiler） |
 | **轨迹与动态** | 12 | 轨迹 | **Slingshot** / Monocle2 / Monocle3 / PAGA / Palantir |
 | | 13 | RNA 速率 | scVelo（steady-state / stochastic / dynamical） |
@@ -125,9 +126,11 @@ Docker Desktop 里调高内存上限）。
 
 ## 注意事项
 
-- **尚未端到端验证。** 所有文件都能解析、每个步骤的 UI 都能构建、每个模块的输出都能求值、
-  包也能安装——但整条流程**还没有用真实数据在装好 Seurat/scop 的环境里跑过**，
-  首次实跑时预计还需核对若干 scop 函数的参数名。
+- **哪些已经实跑过、哪些没有（2026-10 审计）。** 单细胞核心链路（导入 → QC → 去双细胞 →
+  归一化 → PCA → 整合 → 聚类 → UMAP → 标志基因）和临床/生存统计已在自带数据上用 Seurat 4.3
+  实跑，复现日志里的 R 代码重放结果完全一致。依赖 scop 的步骤（富集、轨迹、速率、动态特征）以及 CellChat / LIANA、copykat、
+  SingleR、Azimuth、scDblFinder 已对照各自最新源码核对过参数，但**没有实际运行**；正式使用前请先在
+  你自己的环境里跑一遍。
 - **`scop` 是绘图与计算引擎**，它是一个 GitHub 包；如果你的机器禁止源码编译，请使用
   Docker 镜像——镜像已内置 scop，并预先烤好了 Python 步骤（scVelo、PAGA、Palantir）
   所需的 conda 环境。

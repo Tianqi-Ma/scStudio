@@ -2,9 +2,10 @@
 #'
 #' A single reactive hub (`rv`) holds the working object, a per-step status map
 #' (colours the left navigator), the clinical/survival cohort, and the
-#' reproducibility log. Each module reads
-#' `rv$obj`, does its work, writes it back, and marks its step done. Language is
-#' handled entirely client-side (app.js); theme via bslib input_dark_mode.
+#' reproducibility log. Each module reads `rv$obj`, does its work, writes it
+#' back, and marks its step done; the staleness / epoch / checkpoint rules are
+#' in fct_state.R. Language is handled client-side (app.js); theme via bslib
+#' input_dark_mode.
 #'
 #' @param input,output,session Standard Shiny server arguments.
 #' @keywords internal
@@ -12,7 +13,9 @@ app_server <- function(input, output, session) {
 
   rv <- shiny::reactiveValues(
     obj = NULL, source = NULL, status = list(),
-    clinical = NULL   # cohort loaded by the Clinical & survival step
+    clinical = NULL,  # cohort loaded by the Clinical & survival step
+    epoch_sc = 0L,    # pipeline-state bookkeeping, see fct_state.R
+    ckpt = new.env(parent = emptyenv())
   )
   log_rv <- shiny::reactiveVal(list())
 
@@ -32,10 +35,11 @@ app_server <- function(input, output, session) {
       lab <- phases[[ph]]
       ph_steps <- Filter(function(x) identical(x$phase, ph), steps)
       items <- lapply(ph_steps, function(s) {
-        state <- if (identical(s$v, current)) "current"
-                 else if (isTRUE(status[[s$v]])) "done" else "todo"
+        st <- step_state(rv, s$v)
+        state <- if (identical(s$v, current)) "current" else st
         shiny::tags$a(
-          class = paste("scstudio-navitem", state),
+          class = paste("scstudio-navitem", state, if (st == "stale") "is-stale"),
+          title = if (st == "stale") "Needs a re-run: an earlier step changed",
           onclick = sprintf("Shiny.setInputValue('goto','%s',{priority:'event'})", s$v),
           shiny::span(class = "scstudio-navdot"),
           shiny::span(class = "scstudio-navnum", s$n),
@@ -62,39 +66,41 @@ app_server <- function(input, output, session) {
 
   shiny::observeEvent(input$goto, { bslib::nav_select("steps", input$goto) })
 
-  # --- Progress chip (topbar): done/total ------------------------------------
+  # --- Progress chip (topbar): done/total + the next unfinished step ---------
+  # The "next step" link lives here, in the always-visible top bar, rather than
+  # floating over the workspace where it covered the figure-export row.
   output$progress_chip <- shiny::renderUI({
     steps <- app_steps()
     n <- length(steps)
-    done <- sum(vapply(steps, function(s) isTRUE(rv$status[[s$v]]), logical(1)))
+    keys <- vapply(steps, function(s) s$v, character(1))
+    is_done <- vapply(keys, function(k) step_state(rv, k) == "done", logical(1))
+    done <- sum(is_done)
+    nxt <- NULL
+    cur <- input$steps
+    if (!is.null(cur) && isTRUE(is_done[cur]) && !all(is_done)) {
+      i <- match(cur, keys)
+      undone <- which(!is_done)
+      j <- undone[undone > i][1]
+      if (is.na(j)) j <- undone[1]
+      s <- steps[[j]]
+      nxt <- shiny::tags$a(
+        class = "scstudio-nextlink",
+        onclick = sprintf("Shiny.setInputValue('goto','%s',{priority:'event'})", s$v),
+        shiny::span(class = "scstudio-next-label", i18n("Next:", "下一步：")),
+        shiny::strong(i18n(s$en, s$zh)), " \u2192")
+    }
     shiny::div(class = "scstudio-progress",
                title = i18n("Steps completed", "已完成步骤"),
                shiny::span(class = "scstudio-progress-num",
                            sprintf("%d/%d", done, n)),
                shiny::div(class = "scstudio-progress-bar",
                           shiny::div(class = "scstudio-progress-fill",
-                                     style = sprintf("width:%.0f%%", 100 * done / n))))
+                                     style = sprintf("width:%.0f%%", 100 * done / n))),
+               nxt)
   })
 
-  # --- Floating "next step" chip once the current step is done ---------------
-  output$next_hint <- shiny::renderUI({
-    cur <- input$steps
-    if (is.null(cur) || !isTRUE(rv$status[[cur]])) return(NULL)
-    steps <- app_steps()
-    is_done <- vapply(steps, function(s) isTRUE(rv$status[[s$v]]), logical(1))
-    if (all(is_done)) return(NULL)
-    i <- match(cur, vapply(steps, function(s) s$v, character(1)))
-    undone <- which(!is_done)
-    nxt <- undone[undone > i][1]
-    if (is.na(nxt)) nxt <- undone[1]
-    s <- steps[[nxt]]
-    shiny::tags$a(
-      class = "scstudio-nextchip",
-      onclick = sprintf("Shiny.setInputValue('goto','%s',{priority:'event'})", s$v),
-      shiny::span(class = "scstudio-next-label", i18n("Next step", "下一步")),
-      shiny::strong(i18n(s$en, s$zh)), "→"
-    )
-  })
+  # --- Banner above the workspace when the current step is stale ------------
+  output$stale_banner <- shiny::renderUI(stale_banner(rv, input$steps))
 
   # --- Global dataset status (bottom of sidebar) -----------------------------
   output$global_status <- shiny::renderUI({
@@ -135,23 +141,4 @@ app_server <- function(input, output, session) {
   mod_viz_server("viz", rv, log_rv)
   mod_report_server("report", rv, log_rv)
   mod_export_server("export", rv, log_rv)
-}
-
-#' NULL-coalescing helper
-#' @keywords internal
-`%||%` <- function(a, b) if (is.null(a)) b else a
-
-#' Mark a pipeline step completed (colours the navigator)
-#' @param rv Shared hub. @param step Step key.
-#' @keywords internal
-mark_done <- function(rv, step) {
-  st <- rv$status; st[[step]] <- TRUE; rv$status <- st; invisible(TRUE)
-}
-
-#' Small labelled status line for the sidebar
-#' @keywords internal
-stat_line <- function(label, value) {
-  shiny::div(class = "scstudio-statline",
-             shiny::span(class = "scstudio-statlabel", label),
-             shiny::span(class = "scstudio-statvalue", value))
 }

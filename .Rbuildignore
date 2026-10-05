@@ -1,0 +1,8 @@
+^tools$
+^run_smoke_test\.R$
+^\.github$
+^.*\.Rproj$
+^\.Rproj\.user$
+^AGENTS\.md$
+^CLAUDE\.md$
+^docs$

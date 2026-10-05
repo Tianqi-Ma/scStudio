@@ -9,7 +9,8 @@
 # which makes the Bioc dependencies (scDblFinder, SingleR, scater/scran) install
 # quickly and reliably.
 
-FROM bioconductor/bioconductor_docker:RELEASE_3_18
+# Bioc 3.22 / R 4.5: the release the pipelines were checked against (2026-10).
+FROM bioconductor/bioconductor_docker:RELEASE_3_22
 
 LABEL org.opencontainers.image.title="scStudio" \
       org.opencontainers.image.description="Local interactive single-cell RNA-seq analysis app" \
@@ -20,18 +21,22 @@ LABEL org.opencontainers.image.title="scStudio" \
 RUN R -e "install.packages(c( \
       'shiny','bslib','ggplot2','Matrix','plotly','DT','shinyWidgets', \
       'promises','future','progressr','remotes','Seurat','SeuratObject', \
-      'harmony','clustree','ggrastr','scattermore','survival','patchwork'), \
+      'harmony','survival','patchwork','leidenbase','igraph','RANN','maxstat', \
+      'hdf5r','data.table'), \
       repos='https://cloud.r-project.org')"
 
 RUN R -e "BiocManager::install(c( \
       'SingleCellExperiment','SummarizedExperiment','scater','scran', \
       'scDblFinder','glmGamPoi','SingleR','celldex','UCell','clusterProfiler', \
-      'ComplexHeatmap','slingshot','batchelor'), update=FALSE, ask=FALSE)"
+      'ComplexHeatmap','slingshot','MAST'), update=FALSE, ask=FALSE)"
 
 # The analysis + plotting engine (scop) and its ecosystem. scop pulls a large
 # tree; give it its own layer. LIANA/mascarade/copykat for cell-cell comm & CNV.
-RUN R -e "remotes::install_github('mengxu98/scop', upgrade='never')" && \
-    R -e "remotes::install_github(c('saezlab/liana','alserglab/mascarade','navinlabcode/copykat'), upgrade='never')"
+# scop is pinned to the commit the wrappers in fct_scop.R were checked against
+# (0.9.2, 2026-09-12); bump it together with tests/testthat/test-scop.R.
+RUN R -e "remotes::install_github('mengxu98/scop@bea13be5', upgrade='never')" && \
+    R -e "remotes::install_github(c('saezlab/liana','alserglab/mascarade','navinlabcode/copykat', \
+      'immunogenomics/presto','jinworks/CellChat'), upgrade='never')"
 
 # Pre-bake the Python/conda environment for the Python-backed analyses
 # (scVelo, PAGA, Palantir, scVI, scanorama, BBKNN). Doing this at BUILD time

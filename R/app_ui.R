@@ -1,20 +1,17 @@
-#' Top-level UI: dark, plot-first, grouped left stepper, splash animation
+#' Top-level UI: plot-first, grouped left stepper, splash animation
 #'
-#' Layout: a top bar (brand, EN/中 segmented switch, dark/light toggle, Python-env
-#' status), a collapsible left navigator grouped by analysis phase with per-step
-#' status colouring, and a main area showing one step at a time. A startup splash
-#' animation (cells coalescing into a UMAP) plays on load.
+#' Layout: a top bar (brand, progress + next step, export menu, EN/中 switch,
+#' light/dark toggle), a collapsible left navigator grouped by analysis phase
+#' with per-step status colouring, and a main area showing one step at a time.
+#' A startup splash animation (cells coalescing into a UMAP) plays on load.
 #'
 #' @return A [bslib::page_sidebar()] UI wrapped with the splash overlay.
 #' @keywords internal
 app_ui <- function() {
-  # Inter from Google Fonts, but this app is meant to work offline: if the font
-  # cannot be resolved, fall back to the system UI stack instead of failing.
-  ui_font <- tryCatch(
-    bslib::font_google("Inter", local = FALSE),
-    error = function(e) bslib::font_collection(
-      "Inter", "system-ui", "-apple-system", "Segoe UI", "Roboto",
-      "Helvetica Neue", "Arial", "sans-serif"))
+  # Inter is linked from Google Fonts, but the app must look right offline and
+  # where Google is unreachable: the browser then falls through the system UI
+  # stack (CJK-capable on every OS) instead of a default serif face.
+  ui_font <- app_font_stack()
 
   theme <- bslib::bs_theme(
     version = 5, preset = "shiny",
@@ -42,13 +39,8 @@ app_ui <- function() {
           shiny::actionLink("export_menu", i18n("⤓ Export", "⤓ 导出"),
                             class = "scstudio-switch"),
           title = i18n("Export current data", "导出当前数据"),
-          shiny::downloadButton("dl_rds",   i18n("Seurat object (.rds)", "Seurat 对象 (.rds)"), class = "btn-sm w-100 mb-1"),
-          shiny::downloadButton("dl_meta",  i18n("Cell metadata (.csv)", "细胞元数据 (.csv)"), class = "btn-sm w-100 mb-1"),
-          shiny::downloadButton("dl_matrix",i18n("Counts matrix (.rds)", "表达矩阵 (.rds)"), class = "btn-sm w-100 mb-1"),
-          shiny::downloadButton("dl_embed", i18n("Embeddings (.csv)", "降维坐标 (.csv)"), class = "btn-sm w-100")
+          shiny::uiOutput("export_items")
         ),
-        shiny::div(class = "scstudio-pydot", id = "py-status",
-                   i18n("Python: not set up", "Python：未配置")),
         shiny::tags$div(
           class = "scstudio-lang",
           shiny::tags$button(class = "scstudio-lang-btn active", `data-lang` = "en",
@@ -56,7 +48,9 @@ app_ui <- function() {
           shiny::tags$button(class = "scstudio-lang-btn", `data-lang` = "zh",
                              onclick = "scStudioSetLang('zh')", "中")
         ),
-        bslib::input_dark_mode(id = "dark", mode = "dark")
+        # follow the operating system's light/dark preference; the toggle
+        # still switches it for the session
+        bslib::input_dark_mode(id = "dark")
       )
     ),
     sidebar = bslib::sidebar(
@@ -68,10 +62,12 @@ app_ui <- function() {
     ),
     shiny::tags$head(
       shiny::tags$link(rel = "stylesheet", type = "text/css", href = "scstudio/custom.css"),
-      shiny::tags$script(src = "scstudio/app.js")
+      shiny::tags$script(src = "scstudio/app.js"),
+      shiny::tags$script(src = "scstudio/explain.js"),
+      shiny::tags$script(src = "scstudio/explain-sc.js")
     ),
-    main,
-    shiny::uiOutput("next_hint")
+    shiny::uiOutput("stale_banner"),
+    main
   )
 
   # Splash overlay (position:fixed) + the app page.
@@ -87,47 +83,14 @@ app_ui <- function() {
   )
 }
 
-#' Ordered pipeline steps with phase grouping and module UI functions
-#'
-#' Single source of truth for the navigator and the hidden tabset. New modules
-#' are added here as they are implemented.
+#' Ordered pipeline steps (the shared single-cell registry, see steps_sc.R)
 #' @keywords internal
-app_steps <- function() {
-  list(
-    list(v = "import",    n = 1,  phase = "data",     en = "Import",        zh = "导入",       ui = mod_import_ui),
-    list(v = "qc",        n = 2,  phase = "data",     en = "Quality control", zh = "质控",     ui = mod_qc_ui),
-    list(v = "doublet",   n = 3,  phase = "data",     en = "Doublets",      zh = "去双细胞", ui = mod_doublet_ui),
-    list(v = "normalize", n = 4,  phase = "preproc",  en = "Normalize",     zh = "归一化", ui = mod_normalize_ui),
-    list(v = "reduce",    n = 5,  phase = "preproc",  en = "Features / PCA",zh = "特征/PCA",   ui = mod_reduce_ui),
-    list(v = "integrate", n = 6,  phase = "preproc",  en = "Integrate",     zh = "整合",       ui = mod_integrate_ui),
-    list(v = "cluster",   n = 7,  phase = "structure",en = "Cluster",       zh = "聚类",       ui = mod_cluster_ui),
-    list(v = "embed",     n = 8,  phase = "structure",en = "Embed",         zh = "降维图", ui = mod_embed_ui),
-    list(v = "markers",   n = 9,  phase = "identity", en = "Markers",       zh = "标志基因", ui = mod_markers_ui),
-    list(v = "annotate",  n = 10, phase = "identity", en = "Annotate",      zh = "注释",       ui = mod_annotate_ui),
-    list(v = "enrichment",n = 11, phase = "identity", en = "Enrichment/GSEA", zh = "富集/GSEA", ui = mod_enrichment_ui),
-    list(v = "trajectory",n = 12, phase = "traj",     en = "Trajectory",    zh = "轨迹",       ui = mod_trajectory_ui),
-    list(v = "velocity",  n = 13, phase = "traj",     en = "RNA velocity",  zh = "RNA 速率",   ui = mod_velocity_ui),
-    list(v = "dynamic",   n = 14, phase = "traj",     en = "Dynamic features", zh = "动态特征", ui = mod_dynamic_ui),
-    list(v = "cellcycle", n = 15, phase = "advanced", en = "Cell cycle & signatures", zh = "周期与信号", ui = mod_cellcycle_signatures_ui),
-    list(v = "cellcomm",  n = 16, phase = "advanced", en = "Cell communication", zh = "细胞通讯", ui = mod_cellcomm_ui),
-    list(v = "malignancy",n = 17, phase = "advanced", en = "Malignant / CNV", zh = "恶性/CNV", ui = mod_malignancy_ui),
-    list(v = "clinical",  n = 18, phase = "advanced", en = "Clinical & survival", zh = "临床与生存", ui = mod_clinical_ui),
-    list(v = "viz",       n = 19, phase = "output",   en = "Visualize",     zh = "可视化", ui = mod_viz_ui),
-    list(v = "report",    n = 20, phase = "output",   en = "Report",        zh = "报告",       ui = mod_report_ui),
-    list(v = "export",    n = 21, phase = "output",   en = "Export",        zh = "导出",       ui = mod_export_ui)
-  )
-}
+app_steps <- function() steps_sc()
 
 #' Phase labels (en/zh) for the grouped navigator
 #' @keywords internal
-app_phases <- function() {
-  list(
-    data      = list(en = "Data & QC",    zh = "数据与质控"),
-    preproc   = list(en = "Preprocess",   zh = "预处理"),
-    structure = list(en = "Structure",    zh = "结构"),
-    identity  = list(en = "Identity",     zh = "身份"),
-    traj      = list(en = "Trajectory",   zh = "轨迹与动态"),
-    advanced  = list(en = "Advanced",     zh = "高级"),
-    output    = list(en = "Output",       zh = "产出")
-  )
-}
+app_phases <- function() phases_sc()
+
+#' Every registry, keyed by omics (used by the pipeline-state helpers)
+#' @keywords internal
+all_step_registries <- function() list(sc = steps_sc())

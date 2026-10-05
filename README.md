@@ -16,7 +16,8 @@ Every step is designed for beginners *and* experts:
 - 🎚️ **adjustable thresholds** with sensible defaults
 - 📊 a **result summary** and a large **preview plot**
 - 🧾 a **reproducibility log** you can export as an R script or a narrated report
-- 🌗 dark / light themes, English / 中文 — switchable from the top bar
+- 🎞️ a short **animation** in every step's empty canvas showing what the step does
+- 🌗 light / dark themes (following your OS), English / 中文 — switchable from the top bar
 
 > **Status (v0.3.0):** 21 steps across 7 phases, all wired and statically
 > validated (parse, UI build, output evaluation, tests, install). It has **not
@@ -107,11 +108,11 @@ Seven phases, twenty-one steps. Bold = the default method.
 | | 3 | Doublets | **scDblFinder** / DoubletFinder |
 | **Preprocess** | 4 | Normalize | **LogNormalize** / SCTransform |
 | | 5 | Features / PCA | HVG **vst** / mvp / dispersion |
-| | 6 | Integrate | **none** / Harmony / CCA / RPCA / scVI / scanorama / BBKNN |
+| | 6 | Integrate | **none** / Harmony / CCA / RPCA (Seurat v5), with a batch-mixing score |
 | **Structure** | 7 | Cluster | **Leiden** / Louvain |
-| | 8 | Embed | **UMAP** / t-SNE / PaCMAP / PHATE |
+| | 8 | Embed | **UMAP** / t-SNE |
 | **Identity** | 9 | Markers | **wilcox** / roc / MAST |
-| | 10 | Annotate | **manual** / SingleR / Azimuth / scop KNN prediction |
+| | 10 | Annotate | **manual** / SingleR (per cluster, pruned labels) / Azimuth |
 | | 11 | Enrichment / GSEA | ORA + GSEA (clusterProfiler via scop) |
 | **Trajectory** | 12 | Trajectory | **Slingshot** / Monocle2 / Monocle3 / PAGA / Palantir |
 | | 13 | RNA velocity | scVelo (steady-state / stochastic / dynamical) |
@@ -135,10 +136,14 @@ scDblFinder, Leiden, Harmony, scop/SCP plotting throughout.
 
 ## Caveats
 
-- **Not yet validated end-to-end.** Every file parses, every step's UI builds,
-  every module's outputs evaluate, and the package installs — but the pipeline
-  has **not been run against a live Seurat/scop install with real data**. A few
-  scop argument names still need checking on first real run.
+- **What has and has not been run (2026-10 audit).** The core single-cell chain
+  (import → QC → doublets → normalize → PCA → integrate → cluster → UMAP →
+  markers) and the clinical/survival maths were run on the bundled data with
+  Seurat 4.3, and their logged R code replays to identical results. The scop-backed
+  steps (enrichment, trajectory, velocity, dynamic features), CellChat / LIANA,
+  copykat, SingleR, Azimuth and scDblFinder were checked against their current
+  source code but **not executed**; run them once on your own install before
+  relying on them.
 - **`scop` is the plotting and compute engine** and is a GitHub package; if your
   machine blocks source builds, use the Docker image, which bakes in scop and a
   pre-built conda environment for the Python-backed steps (scVelo, PAGA,

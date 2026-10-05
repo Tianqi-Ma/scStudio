@@ -23,12 +23,41 @@
   window.scStudioSetLang = function (lang) {
     window.scStudioLang = (lang === "zh") ? "zh" : "en";
     document.body.setAttribute("data-lang", window.scStudioLang);
+    document.documentElement.setAttribute("lang", window.scStudioLang === "zh" ? "zh-CN" : "en");
     applyLang(document);
     // reflect active state on the segmented control
     document.querySelectorAll(".scstudio-lang-btn").forEach(function (b) {
       b.classList.toggle("active", b.getAttribute("data-lang") === window.scStudioLang);
     });
+    try { window.localStorage.setItem("scstudio-lang", window.scStudioLang); } catch (e) {}
+    sendLang();
   };
+
+  // Let the server know too (input$lang), e.g. for text drawn inside plots.
+  function sendLang() {
+    if (window.Shiny && typeof Shiny.setInputValue === "function") {
+      Shiny.setInputValue("lang", window.scStudioLang);
+    }
+  }
+  document.addEventListener("shiny:connected", sendLang);
+
+  // Start in the language chosen last time; on a first visit, follow the
+  // browser's language.
+  function initialLang() {
+    try {
+      var saved = window.localStorage.getItem("scstudio-lang");
+      if (saved === "en" || saved === "zh") return saved;
+    } catch (e) {}
+    var nav = (navigator.languages && navigator.languages[0]) || navigator.language || "en";
+    return /^zh/i.test(nav) ? "zh" : "en";
+  }
+  function initLang() { window.scStudioSetLang(initialLang()); }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initLang);
+  } else {
+    initLang();
+  }
+
 
   // Re-apply language to any freshly rendered (renderUI) content.
   document.addEventListener("shiny:idle", function () { applyLang(document); });
