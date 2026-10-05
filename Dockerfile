@@ -28,7 +28,7 @@ RUN R -e "install.packages(c( \
 RUN R -e "BiocManager::install(c( \
       'SingleCellExperiment','SummarizedExperiment','scater','scran', \
       'scDblFinder','glmGamPoi','SingleR','celldex','UCell','clusterProfiler', \
-      'ComplexHeatmap','slingshot','MAST'), update=FALSE, ask=FALSE)"
+      'ComplexHeatmap','slingshot','MAST','edgeR','limma','DESeq2'), update=FALSE, ask=FALSE)"
 
 # The analysis + plotting engine (scop) and its ecosystem. scop pulls a large
 # tree; give it its own layer. LIANA/mascarade/copykat for cell-cell comm & CNV.

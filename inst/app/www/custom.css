@@ -158,6 +158,16 @@ body { background: var(--sc-bg); color: var(--sc-text); }
 .scstudio-rail .scstudio-label { margin: .65rem 0 .2rem; }
 .scstudio-rail > *:first-child, .scstudio-rail > *:first-child .scstudio-label { margin-top: 0; }
 .scstudio-rail hr { margin: .7rem 0; opacity: .4; }
+/* two selectors side by side in the rail (reference / compared group) */
+.scstudio-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.scstudio-row2 .scstudio-label { margin-top: .4rem; }
+/* a display selector above a figure (e.g. which cell type's volcano) */
+.scstudio-inline-pick { padding: .4rem .2rem 0; }
+.scstudio-inline-pick .form-group { margin-bottom: .2rem; }
+/* optional, collapsed extra input in the rail (e.g. a sample sheet) */
+.scstudio-sheet { margin: .75rem 0 .3rem; font-size: .85rem; }
+.scstudio-sheet > summary { cursor: pointer; color: var(--sc-accent2); font-weight: 600; }
+.scstudio-sheet .scstudio-help-text { color: var(--sc-muted); font-size: .78rem; line-height: 1.4; margin: .35rem 0 .4rem; }
 .scstudio-help {
   display: inline-flex; align-items: center; justify-content: center;
   width: 1.05rem; height: 1.05rem; margin-left: .35rem;
