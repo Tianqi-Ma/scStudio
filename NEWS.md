@@ -1,5 +1,22 @@
 # scStudio 0.3.1 (unreleased) — audit 2026-10
 
+## New analysis steps (feature/analysis-modules)
+
+- **Pseudobulk DE** (new phase *Compare conditions*): counts of each cell type
+  summed per sample, tested across samples with edgeR quasi-likelihood
+  (default), limma-voom or DESeq2; optional pairing / batch covariate; FDR
+  within each cell type; cell types with < 2 samples per group are skipped and
+  listed. Overview, volcano, per-sample cell counts, full table.
+- **Differential abundance**: cell-type proportions per sample, propeller method
+  (logit + limma robust eBayes; t test for two conditions, F test for more; BH)
+  written with limma, so speckle is not needed.
+- Both steps share the sample / condition / cell-type selectors and accept a
+  **sample sheet** (CSV/TSV, one row per sample) to add a condition the object
+  lacks; a condition that varies within a sample is refused.
+- Runnable log code for both, tested to reproduce the app's p-values;
+  explainer animations; a "Condition comparisons" report section.
+
+
 ## Added
 - **Step animations.** Every step's empty preview plays a short looping scene of
   what the step does (QC outliers being flagged, a PCA cloud flattening onto its
